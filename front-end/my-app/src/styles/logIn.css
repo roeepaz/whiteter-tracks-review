@@ -1,0 +1,80 @@
+/* styles.css */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1d1f33, #0a1f44); /* Dark Purple to Neo Blue gradient */
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    align-items: center;
+
+  }
+  
+  .login-container {
+    background: linear-gradient(135deg, #2e2f49, #1a2b3f); /* Slightly lighter gradient */
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  
+
+  }
+  
+  .login-container h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+    color: #ffffff;
+  }
+  
+  .login-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #0a1f44;
+    background: #ffffff;
+  }
+  
+  .login-container input::placeholder {
+    color: #666;
+  }
+  
+  .login-container input:focus {
+    outline: 2px solid #1d73e8; /* Neo Blue accent */
+  }
+  
+  .login-container button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #1d73e8; /* Neo Blue */
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .login-container button:hover {
+    background: #1358b8; /* Darker Neo Blue */
+  }
+  
+  .login-container button:active {
+    background: #0a3c8c; /* Even darker Neo Blue */
+  }
+  
+  .alert {
+    color: #ff4c4c;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+  

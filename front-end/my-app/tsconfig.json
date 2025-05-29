@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "types": ["@types/react", "@types/react-dom", "@types/react-map-gl"],
+    "target": "esnext",
+    "useDefineForClassFields": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,  // Enable interoperability between CommonJS and ES modules
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "sourceMap": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*", "src/hooks/usePlots.ts"],
+  
+  "exclude": ["node_modules"]
+  
+  
+}

@@ -1,0 +1,22 @@
+from flask import Flask
+from flask_cors import CORS
+from events_logic.interface.events_interface import EventsInterface
+from events_logic.events_api import EventApi
+from routes import Routes
+import os
+
+basedir = os.getcwd()
+cert_path = os.path.join(basedir, 'cert.pem')
+key_path = os.path.join(basedir, 'key.pem')
+
+class main_class:
+    def __init__(self):
+        self.app = Flask(__name__)
+        CORS(self.app, supports_credentials=True)
+
+        # Create an instance of the interface
+        event_methods_instance: EventsInterface = EventApi()
+        Routes(self.app, event_methods_instance)
+
+    def run(self):
+        self.app.run(ssl_context=(cert_path, key_path))

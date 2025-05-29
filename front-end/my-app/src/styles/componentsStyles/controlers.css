@@ -1,0 +1,15 @@
+/* Controls for pitch and bearing adjustments */
+.controls {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+  }
+  
+  .leftside {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    z-index: 1;
+  }
+  

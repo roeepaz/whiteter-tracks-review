@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plot Server Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #7898da;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            background-color: #579fb1;
+            margin-top: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .heartbeat-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .heartbeat {
+            width: 15px;
+            height: 15px;
+            background-color: red;
+            border-radius: 50%;
+            animation: heartbeat 1s infinite;
+            transition: background-color 0.5s ease;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 1;
+            }
+        }
+
+        .section {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        #status-text {
+            font-weight: bold;
+            color: #201717;
+        }
+    </style>
+
+    <script>
+        function checkServerHealth() {
+            fetch('/health')
+                .then(response => {
+                    const heartbeat = document.getElementById('heartbeat');
+                    const statusText = document.getElementById('status-text');
+                    if (response.ok) {
+                        heartbeat.style.backgroundColor = 'red';
+                        statusText.textContent = 'Server is Live';
+                        statusText.style.color = '#66ff66'; // ירוק
+                    } else {
+                        heartbeat.style.backgroundColor = 'gray';
+                        statusText.textContent = 'Server is Down';
+                        statusText.style.color = 'gray';
+                    }
+                })
+                .catch(() => {
+                    const heartbeat = document.getElementById('heartbeat');
+                    const statusText = document.getElementById('status-text');
+                    heartbeat.style.backgroundColor = 'gray';
+                    statusText.textContent = 'Server is Down';
+                    statusText.style.color = 'gray';
+                });
+        }
+
+        setInterval(checkServerHealth, 10000);
+        window.onload = checkServerHealth;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="heartbeat-container">
+            <div id="heartbeat" class="heartbeat"></div>
+            <span id="status-text">Checking...</span>
+        </div>
+
+        <h1>{{ message }}</h1>
+
+        <div class="section">
+            <h2>Events Count: {{ events_count }}</h2>
+            <h3>Event IDs:</h3>
+            <ul>
+                {% for event_id in event_ids %}
+                    <li>{{ event_id }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Configuration</h2>
+            <ul>
+                {% for key, value in config.items() %}
+                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

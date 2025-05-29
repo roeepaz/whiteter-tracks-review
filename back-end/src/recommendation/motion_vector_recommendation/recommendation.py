@@ -1,0 +1,355 @@
+import numpy as np
+from recommendation.base import RecommendationStrategy
+from recommendation.motion_vector_recommendation.clustering import split_initial_clusters, expand_cluster, custom_adaptive_dbscan
+from recommendation.motion_vector_recommendation.vector_utils import create_motion_vector, calc_future_center_of_mass, calc_distance_between_two_center_mass, calc_representative_center_of_mass
+from recommendation.motion_vector_recommendation.validation import is_valid_cluster
+from recommendation.utils import compute_local_eps, compute_local_v_avg
+from api_utils import minkowski_distance_plus_time
+from events_logic.event_cache import load_event
+from custom_types import Event
+import pandas as pd
+class MotionVectorRecommendation(RecommendationStrategy): 
+    def recommend(self, event_id, selected_plots):
+        """
+        Generates motion vector-based track recommendations.
+
+        Input:
+            event_id: str - ID of the event to analyze
+            selected_plots: list[dict] - User-selected seed plots
+
+        Output:
+            list[dict] - Recommended plots with assigned clusters
+
+        Explanation:
+            Loads all plots, computes motion vectors, splits/expands user clusters,
+            clusters the rest of the plots, and matches event clusters to user clusters.
+        """
+        print("\nStarting motion vector recommendation...")
+
+        event_data : Event = load_event(event_id)
+
+        df_plots = event_data.plots_df.copy()
+        df_plots['plot_id'] = df_plots['plot_id'].astype(int)
+        df_plots['system_id'] = df_plots['system_id'].astype(int)
+
+        # Step 1: Filter df_plots using KDTree
+        # i choose to not filter the plots of the event to an more relative group, 
+        # in this recommedation we want to return an complete track
+        
+        all_plots = df_plots.to_dict(orient='records')
+        coords = df_plots[['x', 'y', 'z']].values
+        df_plots['plot_key'] = list(zip(df_plots['plot_id'], df_plots['system_id']))
+
+        df_plots['cluster'] = -1
+        df_plots['v_avg'] = compute_local_v_avg(all_plots, coords)
+        df_plots['eps'] = compute_local_eps(all_plots, df_plots['v_avg'].values)
+        df_plots['vector'] = None
+        df_plots['center_of_mass'] = None
+
+
+        df_plots = self._prepare_user_clusters(df_plots, selected_plots)
+        df_plots = self._cluster_remaining_plots(df_plots)
+        df_plots = self._match_clusters(df_plots)
+        df_plots = df_plots.drop(columns=['vector', 'center_of_mass',"plot_key"], errors='ignore')
+        final_df = df_plots[df_plots['cluster'] < 1_000].copy()
+       # Drop technical columns that are not needed in the final output
+        final_df = final_df.drop(columns=['vector', 'center_of_mass',"plot_key"], errors='ignore')
+        print(f"\nTotal recommended plots: {len(final_df)}")
+        return final_df.to_dict(orient='records')
+        
+    def _prepare_user_clusters(self, df_plots, selected_plots, min_size=7, max_attempts=9):
+        """
+        Builds and validates user clusters using motion vectors.
+
+        Input:
+            df_plots: DataFrame - All event plots
+            selected_plots: list[dict] - User input
+            min_size: int - Minimum size for a valid cluster
+            max_attempts: int - Attempts to expand invalid clusters
+
+        Output:
+            DataFrame - Plots with updated 'cluster', 'vector', 'center_of_mass'
+
+        Explanation:
+            Splits user-selected plots into subclusters, validates and expands each one if needed.
+            Valid clusters are assigned IDs and motion vectors.
+        """
+        print("\nSplitting and validating user clusters...")
+        subgroups, _ = split_initial_clusters(selected_plots, df_plots, df_plots[['x','y','z']].values)
+
+        current_cluster_id = 0
+
+        # Small clusters available for expansion
+        extra_candidates = [cluster for cluster in subgroups if not is_valid_cluster(cluster, min_size)]
+
+        for cluster in subgroups:
+            attempts = 0
+            while not is_valid_cluster(cluster, min_size) and attempts < max_attempts:
+                indices = self._find_cluster_indices(df_plots, cluster)
+                v_avg = df_plots.loc[indices, 'v_avg'].mean()
+                eps = df_plots.loc[indices, 'eps'].mean()
+
+                cluster = expand_cluster(cluster, df_plots, eps, v_avg, extra_candidates=extra_candidates)
+
+                # Remove absorbed plots from extra_candidates
+                extra_candidates = [
+                    [p for p in small_cluster if all(not (p['plot_id'] == cp['plot_id'] and p['system_id'] == cp['system_id']) for cp in cluster)]
+                    for small_cluster in extra_candidates
+                ]
+                extra_candidates = [cluster for cluster in extra_candidates if len(cluster) > 0]
+
+                attempts += 1
+
+            if is_valid_cluster(cluster, min_size):
+                cluster_keys = {(p['plot_id'], p['system_id']) for p in cluster}
+                indices = df_plots[df_plots['plot_key'].isin(cluster_keys)].index.tolist()
+
+                df_plots.loc[indices, 'cluster'] = current_cluster_id
+
+                vec, center = create_motion_vector(cluster)
+                for idx in indices:
+                    df_plots.at[idx, 'vector'] = vec
+                    df_plots.at[idx, 'center_of_mass'] = center
+
+                current_cluster_id += 1 
+            else:
+                print(f"Cluster rejected (final size: {len(cluster)})")
+
+        # Final: Mark all leftover plots as -1
+        for leftover_cluster in extra_candidates:
+            for plot in leftover_cluster:
+                condition = (df_plots['plot_id'] == plot['plot_id']) & (df_plots['system_id'] == plot['system_id'])
+                df_plots.loc[condition, 'cluster'] = -1
+
+        return df_plots
+
+    def _cluster_remaining_plots(self, df_plots):
+        """
+        Clusters the remaining unassigned plots using adaptive DBSCAN.
+
+        Input:
+            df_plots: DataFrame - All event plots with some already clustered
+
+        Output:
+            DataFrame - Same plots with 'cluster' values updated
+
+        Explanation:
+            Runs DBSCAN-like clustering with adaptive eps and v_avg on unassigned plots.
+            Assigns high cluster IDs (starting from 1000) to these clusters.
+        """
+        print("\nClustering remaining event plots...")
+        df_remaining = df_plots[df_plots['cluster'] == -1]
+        plots = df_remaining.to_dict(orient='records')
+        v_avg_list = df_remaining['v_avg'].values
+        eps_list = df_remaining['eps'].values
+
+        cluster_array = custom_adaptive_dbscan(df_remaining,plots, v_avg_list, eps_list)
+        event_cluster_start_id = 1000
+        cluster_id_map = {}
+
+        for idx, cid in enumerate(cluster_array):
+            if cid == -1:
+                continue
+            real_id = cluster_id_map.setdefault(cid, event_cluster_start_id + len(cluster_id_map))
+            row_idx = df_remaining.index[idx]
+            df_plots.at[row_idx, 'cluster'] = real_id
+
+        print(f"Total remaining plots: {len(df_remaining)}")
+        print(f"Total clusters found: {len(set(cluster_array)) - (1 if -1 in cluster_array else 0)}")
+        print(f"Noise points: {np.sum(cluster_array == -1)}")
+
+        return df_plots
+
+    def _match_clusters(self, df_plots):
+        """
+        Matches system-generated event clusters to user clusters based on motion similarity.
+
+        Input:
+            df_plots: DataFrame - Plots with both user and event clusters
+
+        Output:
+            DataFrame - Merged clusters (event clusters may be reassigned to user clusters)
+
+        Explanation:
+            For each user cluster, compares its future-predicted position to candidate event clusters.
+            If match is good (based on dynamic distance threshold), reassigns the event cluster to the user cluster ID.
+        """
+        print("\nMatching user clusters with event clusters...")
+
+        user_ids = sorted(df_plots[df_plots['cluster'] < 1000]['cluster'].unique())
+        event_ids = sorted(df_plots[df_plots['cluster'] >= 1000]['cluster'].unique())
+        matched = set()
+        i = 0
+
+        spatial_temporal_jump_limit = 10_000  # Max allowed combined (space + time) distance in meters
+
+        while i < len(user_ids):
+            uid = user_ids[i]
+            u_data = df_plots[df_plots['cluster'] == uid]
+
+            if u_data.empty:
+                print(f"Skipping user cluster {uid}: no plots")
+                i += 1
+                continue
+
+            u_vec = u_data.iloc[0]['vector']
+            u_center = u_data.iloc[0]['center_of_mass']
+
+            if u_vec is None or u_center is None:
+                print(f"Skipping user cluster {uid}: missing vector or center_of_mass")
+                i += 1
+                continue
+
+            v_avg_user = u_data['v_avg'].mean()
+            best_cid, best_score = None, float('inf')
+
+            # Create fake plots for distance calculation
+            user_plot = {
+                'x': u_center.x,
+                'y': u_center.y,
+                'z': u_center.z,
+                't': u_center.t
+            }
+
+            for eid in event_ids:
+                if eid in matched:
+                    continue
+
+                e_data = df_plots[df_plots['cluster'] == eid]
+                if len(e_data) < 2:
+                    continue
+
+                e_center = calc_representative_center_of_mass(e_data.to_dict(orient='records'))
+                dt = e_center.t - u_center.t
+                if dt <= 0:
+                    continue
+
+                event_plot = {
+                    'x': e_center.x,
+                    'y': e_center.y,
+                    'z': e_center.z,
+                    't': e_center.t
+                }
+
+                v_avg_event = e_data['v_avg'].mean()
+                v_avg_avg = (v_avg_user + v_avg_event) / 2
+
+                # New: Use minkowski_distance_plus_time for spatial-temporal jump check
+                real_spatial_temporal_dist = minkowski_distance_plus_time(
+                    user_plot, event_plot, p=2, lambda_t=1, v_avg=v_avg_avg
+                )
+                if real_spatial_temporal_dist > spatial_temporal_jump_limit:
+                    continue  # too far in space-time, skip
+
+                # Predict multiple future points
+                #predicted_centers = self._predict_multiple_centers(u_vec, u_center, dt, num_steps=3)
+
+                # Compute average distance to event cluster center
+                predicted = calc_future_center_of_mass(u_vec, u_center, dt)
+                avg_dist = calc_distance_between_two_center_mass(predicted, e_center,v_avg_avg,lambda_t=0.3)
+                # Dynamic matching limit
+                dynamic_limit = self._dynamic_deflection_limit(dt)
+
+                if avg_dist < dynamic_limit and avg_dist < best_score:
+                    print(f"---> found good comparing user cluster {i} to event {eid}: avg_dist={avg_dist:.1f} / limit={dynamic_limit:.1f}")
+                    best_cid, best_score = eid, avg_dist
+
+            if best_cid is not None:
+                print(f"Matched event cluster {best_cid} to user cluster {uid}")
+                df_plots.loc[df_plots['cluster'] == best_cid, 'cluster'] = uid
+
+                # Recompute updated user vector and center of mass after merging
+                updated_cluster = df_plots[df_plots['cluster'] == uid].to_dict(orient='records')
+                new_vec, new_center = create_motion_vector(updated_cluster)
+                for idx in df_plots[df_plots['cluster'] == uid].index:
+                    df_plots.at[idx, 'vector'] = new_vec
+                    df_plots.at[idx, 'center_of_mass'] = new_center
+
+                matched.add(best_cid)
+                continue
+            else:
+                print(f"No match found for user cluster {uid}")
+
+            i += 1
+
+        return df_plots
+    
+    def _find_cluster_indices(self, df_plots, cluster):
+        """
+        Finds index locations in df_plots for plots in a cluster.
+
+        Input:
+            df_plots: DataFrame - Event plots
+            cluster: list[dict] - Plot dicts with 'plot_id' and 'system_id'
+
+        Output:
+            list[int] - Indices in the DataFrame
+
+        Explanation:
+            Converts plot keys to tuples and looks them up in the DataFrame.
+        """
+        cluster_keys = {(p['plot_id'], p['system_id']) for p in cluster}
+        return df_plots[df_plots['plot_key'].isin(cluster_keys)].index.tolist()
+
+    def _predict_multiple_centers(self, u_vec, u_center, dt, num_steps=3):
+        """
+        Predicts multiple future centers of mass.
+
+        Input:
+            u_vec: Vector - Motion vector
+            u_center: Center - Current center of mass
+            dt: float - Total time delta
+            num_steps: int - Number of prediction steps
+
+        Output:
+            list[Center]  Predicted future centers
+
+        Explanation:
+            Divides time into equal steps and projects future centers using vector.
+        """
+        predicted_centers = []
+        time_step = dt / num_steps
+        for step in range(1, num_steps + 1):
+            future_time = step * time_step
+            predicted = calc_future_center_of_mass(u_vec, u_center, future_time)
+            predicted_centers.append(predicted)
+        return predicted_centers
+
+    def _compute_avg_distance(self, predicted_centers, e_center, v_avg):
+        """
+        Computes average spatial-temporal distance between predicted and actual center.
+
+        Input:
+            predicted_centers: list[Center]  Predicted centers
+            e_center: Center  Actual cluster center
+            v_avg: float  Average velocity for distance adjustment
+
+        Output:
+            float  Average distance
+
+        Explanation:
+            Uses Minkowski+time distance to calculate average deflection from prediction to actual.
+        """
+        total_dist = 0
+        for predicted in predicted_centers:
+            dist = calc_distance_between_two_center_mass(predicted, e_center, v_avg, lambda_t=1)
+            total_dist += dist
+        return total_dist / len(predicted_centers)
+
+    def _dynamic_deflection_limit(self, dt):
+        """
+        Dynamically computes max allowed deflection based on time delta.
+
+        Input:
+            dt: float  Time difference between user and event clusters
+
+        Output:
+            float  Dynamic distance threshold
+
+        Explanation:
+            Linear formula with cap: base + per-second growth, up to a maximum.
+        """
+        base_deflection = 6_000
+        deflection_per_second = 750
+        max_deflection = 9_000
+        return min(base_deflection + deflection_per_second * dt, max_deflection)

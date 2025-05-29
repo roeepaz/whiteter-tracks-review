@@ -1,0 +1,164 @@
+/* Hover Info Container */
+.hover-info {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+    background: white;
+    padding: 5px;
+    border-radius: 3px;
+    color: black; /* Ensure all text inside the modal is black */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  }
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  /* Controls for pitch and bearing adjustments */
+.controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+}
+.second-row-controls {
+  position: absolute;
+  top: 39px;
+  left: 10px;
+  z-index: 1;
+}
+  
+
+
+/* Comment box styling */
+.comment-box {
+  position: absolute;
+  bottom: 60px !important; /* Adjust placement based on your layout */
+  left: 10px; /* Ensures the comment box stays near the left side */
+  background-color: rgba(93, 59, 121, 0.9) !important; /* Adds slight transparency for a modern look */
+  color: #fff; /* Ensures text is readable */
+  padding: 10px; /* Adds more breathing space inside the box */
+  border-radius: 10px; /* Rounded corners for a softer design */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* More pronounced shadow for depth */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000; /* Ensures it appears above the map */
+  max-width: 300px; /* Prevents the box from being too wide */
+  word-wrap: break-word; /* Ensures long text doesn't overflow */
+}
+
+/* Close button inside the comment box */
+.comment-box button {
+  background-color: #a282c7; /* Matches the theme of the box */
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect for the close button */
+.comment-box button:hover {
+  background-color: #ff6666; /* Highlights the button on hover */
+  transform: scale(1.1); /* Adds a slight zoom effect */
+}
+
+/* Add fade-in animation for the comment box */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.comment-box {
+  animation: fadeIn 0.5s ease-out;
+}
+
+
+.controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* Top Section: Map Buttons */
+.top-controls {
+  position: absolute;
+  flex-direction: column;
+  bottom: 150px;
+  left: 50px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+/* Left Column: Control Buttons */
+.left-controls {
+  position: absolute;
+  top: 20px;
+  left: 0px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+/* Right Corner: Create Track Slider */
+.create-track-slider {
+  position: absolute;
+  top: 10px;
+  right: 320px;
+  width: 300px;
+  z-index: 10;
+  background-color: rgba(45, 43, 58, 0.7); /* Black with opacity for a semi-transparent effect */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.8); /* Creates a shadow around the element */
+  padding: 20px; /* Optional: Adds space inside the element */
+  border-radius: 10px; /* Optional: Rounds the corners */
+  color: white; /* Ensures text is visible on the dark background */
+}
+
+.button-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip {
+  visibility: hidden;
+  background-color: black;
+  color: white;
+  text-align: center;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 12px;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.button-wrapper:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
