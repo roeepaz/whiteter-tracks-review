@@ -6,8 +6,8 @@ from routes import Routes
 import os
 
 basedir = os.getcwd()
-cert_path = os.path.join(basedir, 'cert.pem')
-key_path = os.path.join(basedir, 'key.pem')
+cert_path = os.path.join(basedir,'resource', 'cert.pem')
+key_path = os.path.join(basedir,'resource', 'key.pem')
 
 class main_class:
     def __init__(self):
