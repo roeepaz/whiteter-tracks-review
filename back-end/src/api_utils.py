@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 import pandas as pd
 import json
@@ -7,7 +8,8 @@ import os
 from flask import jsonify
 from config_loader import get_config_value
 
-
+def safe_csv_read(path: Path) -> pd.DataFrame:
+    return pd.read_csv(path) if path.exists() else pd.DataFrame()
 
 def minkowski_distance_plus_time(plot1, plot2, p=2, lambda_t=0.8, v_avg=1.0) -> float:
     """

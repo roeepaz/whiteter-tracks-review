@@ -4,7 +4,7 @@ import pandas as pd
 from cachetools import LRUCache
 from threading import Lock
 from pathlib import Path
-
+from ..api_utils import safe_csv_read
 EVENTS_FOLDER = get_config_value("events_folder")
 _event_cache: LRUCache = LRUCache(maxsize=10)  # Cache up to 10 events
 _event_cache_lock: Lock = Lock()
@@ -33,16 +33,13 @@ def load_event(event_id: str) -> EventWithWhiteTracks:
     if not event_path.exists():
         raise FileNotFoundError(f"Event '{event_id}' not found")
 
-    def safe_read(path: Path) -> pd.DataFrame:
-        return pd.read_csv(path) if path.exists() else pd.DataFrame()
-    
     events_tracks_file_name = get_config_value('events_tracks_file_name')
     events_plots_track_correlation_file_name = get_config_value('events_plots_track_correlation_file_name')
 
-    plots_df = safe_read(event_path / "plots.csv")
-    correlations_df = safe_read(event_path / "plots_correlations.csv")
-    white_tracks_df = safe_read(event_path / f"{events_tracks_file_name}.csv")
-    white_track_correlations_df = safe_read(event_path / f"{events_plots_track_correlation_file_name}.csv")
+    plots_df = safe_csv_read(event_path / "plots.csv")
+    correlations_df = safe_csv_read(event_path / "plots_correlations.csv")
+    white_tracks_df = safe_csv_read(event_path / f"{events_tracks_file_name}.csv")
+    white_track_correlations_df = safe_csv_read(event_path / f"{events_plots_track_correlation_file_name}.csv")
 
     # If correlation file is valid, merge track_id into plots
     if not correlations_df.empty and {"plot_id", "system_id", "track_id"}.issubset(correlations_df.columns):
