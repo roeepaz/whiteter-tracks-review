@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from events_logic.interface.events_interface import EventsInterface
+from events_logic.interface.AbstractEventsAPI import AbstractEventsAPI
 from events_logic.events_api import EventApi
 from routes import Routes
 import os
@@ -15,7 +15,7 @@ class main_class:
         CORS(self.app, supports_credentials=True)
 
         # Create an instance of the interface
-        event_methods_instance: EventsInterface = EventApi()
+        event_methods_instance: AbstractEventsAPI = EventApi()
         Routes(self.app, event_methods_instance)
 
     def run(self):

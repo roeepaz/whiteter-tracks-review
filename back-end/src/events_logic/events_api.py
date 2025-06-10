@@ -4,13 +4,13 @@ import json
 import os
 from flask import jsonify
 from config_loader import get_config_value
-from events_logic.interface.events_interface import EventsInterface
+from events_logic.interface.AbstractEventsAPI import AbstractEventsAPI
 from custom_types import Event
 from events_logic.event_cache import load_event, clear_event
 
 EVENTS_FOLDER = get_config_value('events_folder')
 
-class EventApi(EventsInterface):
+class EventApi(AbstractEventsAPI):
 
     def get_events_ids_list(self):
         """

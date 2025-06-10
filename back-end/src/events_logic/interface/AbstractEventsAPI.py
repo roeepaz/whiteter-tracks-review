@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Any
 
-class EventsInterface(ABC):
+class AbstractEventsAPI(ABC):
     @abstractmethod
     def get_events_ids_list(self) -> List[str]:
         """Return a list of event IDs."""
