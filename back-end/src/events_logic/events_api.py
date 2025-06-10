@@ -1,15 +1,15 @@
 from datetime import datetime
 from typing import List
+from pathlib import Path
 import pandas as pd
 import json
-import os
 from flask import jsonify
 from config_loader import get_config_value
 from events_logic.interface.AbstractEventsAPI import AbstractEventsAPI
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event, clear_event
 
-EVENTS_FOLDER = get_config_value('events_folder')
+EVENTS_FOLDER = Path(get_config_value('events_folder'))
 
 class EventApi(AbstractEventsAPI):
 
@@ -22,9 +22,9 @@ class EventApi(AbstractEventsAPI):
         Raises:
             HTTPException: Returned as JSON error with HTTP 404 if path not found.
         """
-        if not os.path.exists(EVENTS_FOLDER):
+        if not EVENTS_FOLDER.exists():
             return jsonify({"error": f"path to the events not found"}), 404
-        return [folder for folder in os.listdir(EVENTS_FOLDER) if os.path.isdir(os.path.join(EVENTS_FOLDER, folder))]
+        return [folder.name for folder in EVENTS_FOLDER.iterdir() if folder.is_dir()]
 
     def get_event_data(self, event_id) -> dict:
         """Loads event data for the given event_id.
@@ -77,14 +77,14 @@ class EventApi(AbstractEventsAPI):
             - Event-wide notes to 'notes.json'.
             Tracks are assigned new IDs and saved along with spline points and notes.
         """
-        events_folder = get_config_value("events_folder")
+        events_folder = Path(get_config_value("events_folder"))
         events_tracks_file_name = get_config_value('events_tracks_file_name')
         events_plots_track_correlation_file_name = get_config_value('events_plots_track_correlation_file_name')
 
-        EVENTS_DIR = os.path.join(events_folder, event_id)
-        TRACKS_FILE = os.path.join(EVENTS_DIR, f"{events_tracks_file_name}.csv")
-        CORRELATIONS_FILE = os.path.join(EVENTS_DIR, f"{events_plots_track_correlation_file_name}.csv")
-        NOTES_FILE = os.path.join(EVENTS_DIR, "notes.json")
+        events_dir = events_folder / event_id
+        tracks_file = events_dir / f"{events_tracks_file_name}.csv"
+        correlations_file = events_dir / f"{events_plots_track_correlation_file_name}.csv"
+        notes_file = events_dir / "notes.json"
 
         event: EventWithWhiteTracks = load_event(event_id)
         full_plots_df = event.plots_df.copy()
@@ -105,17 +105,17 @@ class EventApi(AbstractEventsAPI):
             all_tracks.append(spline_points_df)
 
             selected_plot_ids = selected_plots_df["plot_id"].astype(str).tolist()
-            update_white_tracks_correlations_table(track_id, selected_plot_ids, full_plots_df, CORRELATIONS_FILE)
+            update_white_tracks_correlations_table(track_id, selected_plot_ids, full_plots_df, correlations_file)
 
             track_note = track_data.get("trackNote")
             if track_note:
-                append_to_json_file("white tracks notes", str(track_id), track_note, NOTES_FILE)
+                append_to_json_file("white tracks notes", str(track_id), track_note, notes_file)
 
         if all_tracks:
             df_all_tracks = pd.concat(all_tracks, ignore_index=True)
-            append_to_csv(TRACKS_FILE, df_all_tracks)
+            append_to_csv(tracks_file, df_all_tracks)
 
-        append_to_json_file("Sensors that cause problems", datetime.today().strftime("%Y-%m-%d %H:%M"), notes, NOTES_FILE)
+        append_to_json_file("Sensors that cause problems", datetime.today().strftime("%Y-%m-%d %H:%M"), notes, notes_file)
 
         clear_event(event_id)
 
@@ -135,7 +135,7 @@ def get_new_track_id(event: EventWithWhiteTracks) -> int:
     return 1
 
 
-def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: list, full_plots_df: pd.DataFrame, connection_file: str
+def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: list, full_plots_df: pd.DataFrame, connection_file: Path
 ) -> None:
     """Updates the correlations table between plots and a track.
 
@@ -143,7 +143,7 @@ def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: lis
         track_id (int): The track ID being saved.
         selected_plot_ids (list[str]): List of plot IDs in the track.
         full_plots_df (pd.DataFrame): All plot data from the event.
-        connection_file (str): Path to the correlations CSV file.
+        connection_file (Path): Path to the correlations CSV file.
 
     Returns:
         None
@@ -164,11 +164,11 @@ def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: lis
         append_to_csv(connection_file, new_connections)
 
 
-def append_to_csv(file_path: str, df: pd.DataFrame) -> None:
+def append_to_csv(file_path: Path, df: pd.DataFrame) -> None:
     """Appends a DataFrame to a CSV file.
 
     Parameters:
-        file_path (str): Path to the CSV file.
+        file_path (Path): Path to the CSV file.
         df (pd.DataFrame): Data to append.
 
     Returns:
@@ -176,18 +176,18 @@ def append_to_csv(file_path: str, df: pd.DataFrame) -> None:
     """
     if df.empty:
         return
-    write_header = not os.path.exists(file_path) or os.stat(file_path).st_size == 0
+    write_header = not file_path.exists() or file_path.stat().st_size == 0
     df.to_csv(file_path, mode="a", header=write_header, index=False)
 
 
-def append_to_json_file(category: str, key: str, data, file_path: str) -> None:
+def append_to_json_file(category: str, key: str, data, file_path: Path) -> None:
     """Appends a key-value pair under a category in a JSON file.
 
     Parameters:
         category (str): JSON key grouping (e.g., 'white tracks notes').
         key (str): Sub-key inside the category.
         data (any): Value to store.
-        file_path (str): Path to the JSON file.
+        file_path (Path): Path to the JSON file.
 
     Returns:
         None
@@ -199,7 +199,7 @@ def append_to_json_file(category: str, key: str, data, file_path: str) -> None:
         return
 
     try:
-        if os.path.exists(file_path):
+        if file_path.exists():
             with open(file_path, "r") as f:
                 existing_data = json.load(f)
         else:
