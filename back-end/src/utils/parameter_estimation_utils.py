@@ -1,6 +1,7 @@
 
 import numpy as np
-from utils.distance_metrics import minkowski_distance_plus_time
+import pandas as pd
+from utils.distance_metrics import minkowski_distance_plus_time, compute_distances_to_center
 from sklearn.neighbors import NearestNeighbors
 
 def estimate_clustering_radius(coords, idx, k=6, factor=1.5) -> float:
@@ -11,7 +12,15 @@ def estimate_clustering_radius(coords, idx, k=6, factor=1.5) -> float:
     avg = np.mean(distances[:, 1:])
     return avg * factor
 
-def estimate_adaptive_clustering_radius(plots, center_plot, radius=5000, max_eps=3000, v_avg=600,factor=3.5) -> float:
+def estimate_adaptive_clustering_radius(
+    df: pd.DataFrame,
+    center_plot: dict,
+    radius: float = 5000,
+    max_eps: float = 3000,
+    v_avg: float = 600,
+    factor: float = 3.5,
+    lambda_t: float = 0.8
+) -> float:
     """
     Estimate eps based on number of neighbors within a fixed spatial+temporal radius.
 
@@ -27,19 +36,17 @@ def estimate_adaptive_clustering_radius(plots, center_plot, radius=5000, max_eps
     Returns:
         float: adaptive eps value
     """
-    count = 0
-    for plot in plots:
-        if plot == center_plot:
-            continue
-        d = minkowski_distance_plus_time(center_plot, plot, v_avg=v_avg)
-        if d <= radius:
-            count += 1
+    """Estimate eps based on count of neighbors within a given radius (vectorized)."""
+    distances = compute_distances_to_center(df, center_plot, v_avg, lambda_t)
 
-    # Avoid division by zero
+    # Exclude center itself
+    mask = ~(
+        (df['plot_id'] == center_plot['plot_id']) &
+        (df['system_id'] == center_plot['system_id'])
+    )
+    count = np.count_nonzero(distances[mask] <= radius)
+
     if count == 0:
         return max_eps
 
-    # Inverse relationship: more neighbors → smaller eps
-    eps = (max_eps / (1 + count**0.5)) * factor
-
-    return eps
+    return (max_eps / (1 + np.sqrt(count))) * factor

@@ -1,6 +1,7 @@
+import pandas as pd
 import numpy as np
 
-def minkowski_distance_plus_time(point1, point2, p=2, lambda_t=0.8, v_avg=1.0) -> float:
+def minkowski_distance_plus_time(point1, point2,  lambda_t=0.8, v_avg=1.0) -> float:
     """
     Calculate Minkowski distance for two plots (x, y, z coordinates + time).
 
@@ -18,7 +19,7 @@ def minkowski_distance_plus_time(point1, point2, p=2, lambda_t=0.8, v_avg=1.0) -
     
     # Compute distance including time weight
     dt_distance = abs(point1_coords[3] - point2_coords[3]) * v_avg * lambda_t
-    distance = (np.sum(np.abs(point1_coords[:3] - point2_coords[:3]) ** p) + dt_distance**p) ** (1/p)
+    distance = (np.sum(np.abs(point1_coords[:3] - point2_coords[:3]) ** 2) + dt_distance**2) ** (1/2)
 
     return distance
 
@@ -35,6 +36,31 @@ def calculate_average_velocity(neighbor_plots) -> float:
             total_dist += d
             total_time += dt
     return total_dist / total_time if total_time > 0 else 1.0
+
+def compute_distances_to_center(
+    df: pd.DataFrame,
+    center_plot: dict,
+    v_avg: float = 600,
+    lambda_t: float = 0.8
+) -> np.ndarray:
+    """Vectorized Minkowski distance (p=2) + time-weighted distances from each row to the center_plot."""
+    mask = (
+        (df['plot_id'] == center_plot['plot_id']) &
+        (df['system_id'] == center_plot['system_id'])
+    )
+    if not mask.any():
+        raise ValueError("Center plot not found")
+    idx = df.index[mask][0]
+
+    coords = df[['x', 'y', 'z']].to_numpy()     # shape (N,3)
+    times  = df['t'].to_numpy()                 # shape (N,)
+
+    diff_spatial = coords - coords[idx]         # shape (N,3)
+    spatial_dist = np.linalg.norm(diff_spatial, axis=1)  # Euclidean spatial
+
+    dt = np.abs(times - times[idx]) * v_avg * lambda_t
+    # Minkowski p=2: sqrt(spatial^2 + dt^2)
+    return np.sqrt(spatial_dist**2 + dt**2)
 
 def estimate_velocity_from_density(neighbor_plots, max_velocity=1000, alpha=0.1) -> float:
     """
