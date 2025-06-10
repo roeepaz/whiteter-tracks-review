@@ -41,7 +41,7 @@ pip install -r requirements.txt
 ### 5. הרצת השרת Flask
 ```bash
 cd back-end
-python app.py
+python src/main.py
 ```
 
 ### 6. התקנת והרצת ה-Front-End (React)
@@ -53,6 +53,29 @@ npm run dev
 ### 7. התאמת קובץ הקונפיגורציה app_config
 הגדר מה שמתאים לך, קודם כל את הpath לתיקיית הקבצים
 ---
+
+Configuration
+All server‐side config lives in back-end/resource/app_config.yaml (or .json).
+Use config_loader.get_config_value(key) in code to access values.
+
+## Documentation
+
+- **Flask App Overview**: [back-end/docs/flask_overview.md](back-end/docs/flask_overview.md)
+
+API Endpoints:
+
+GET /health
+
+GET /api/events
+
+GET /api/get-event/<event_id>
+
+POST /creat-track
+
+POST /submit-event
+
+POST /get-recommendation
+
 
 ## 🧐 הקדמה
 
