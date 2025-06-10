@@ -15,6 +15,6 @@ def load_config() -> dict:
 # Load config at startup
 CONFIG = load_config()
 
-def get_config_value(key: str, default=None):
+def get_config_value(key: str, default=None) -> dict[dict]:
     """Get a specific value from the config by key."""
     return CONFIG.get(key, default)

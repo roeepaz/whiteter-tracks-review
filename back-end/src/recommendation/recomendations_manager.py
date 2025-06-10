@@ -11,7 +11,7 @@ RECOMMENDATION_MAP: dict[str, type[RecommendationStrategy]] = {
     "motion_vector": MotionVectorRecommendation,
 }
 
-def get_recommendation_base_on_strategy(name: str, event_id: str, selected_plots):
+def get_recommendation_base_on_strategy(name: str, event_id: str, selected_plots: list[dict]) -> list[dict]:
     name = name.lower()
     strategy_class = RECOMMENDATION_MAP.get(name)
     

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 import pandas as pd
 import json
 import os
@@ -12,7 +13,7 @@ EVENTS_FOLDER = get_config_value('events_folder')
 
 class EventApi(AbstractEventsAPI):
 
-    def get_events_ids_list(self):
+    def get_events_ids_list(self) -> List[str]:
         """Returns a list of event IDs (folder names) inside EVENTS_FOLDER.
 
         Returns:
@@ -25,7 +26,7 @@ class EventApi(AbstractEventsAPI):
             return jsonify({"error": f"path to the events not found"}), 404
         return [folder for folder in os.listdir(EVENTS_FOLDER) if os.path.isdir(os.path.join(EVENTS_FOLDER, folder))]
 
-    def get_event_data(self, event_id):
+    def get_event_data(self, event_id) -> dict:
         """Loads event data for the given event_id.
 
         Parameters:
@@ -50,7 +51,7 @@ class EventApi(AbstractEventsAPI):
         except FileNotFoundError as e:
             return jsonify({"error": str(e)}), 404
 
-    def close_event(self, event_id: str, tracks: dict, notes: str):
+    def close_event(self, event_id: str, tracks: dict, notes: str) -> None:
         """
         Handles closing an event by saving event plots, tracks, track correlations, and notes.
 
@@ -130,7 +131,8 @@ def get_new_track_id(event: Event) -> int:
     return 1
 
 
-def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: list, full_plots_df: pd.DataFrame, connection_file: str):
+def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: list, full_plots_df: pd.DataFrame, connection_file: str
+) -> None:
     """Updates the correlations table between plots and a track.
 
     Parameters:
@@ -158,7 +160,7 @@ def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: lis
         append_to_csv(connection_file, new_connections)
 
 
-def append_to_csv(file_path: str, df: pd.DataFrame):
+def append_to_csv(file_path: str, df: pd.DataFrame) -> None:
     """Appends a DataFrame to a CSV file.
 
     Parameters:
@@ -174,7 +176,7 @@ def append_to_csv(file_path: str, df: pd.DataFrame):
     df.to_csv(file_path, mode="a", header=write_header, index=False)
 
 
-def append_to_json_file(category: str, key: str, data, file_path: str):
+def append_to_json_file(category: str, key: str, data, file_path: str) -> None:
     """Appends a key-value pair under a category in a JSON file.
 
     Parameters:

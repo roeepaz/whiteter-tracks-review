@@ -1,9 +1,11 @@
+from typing import Tuple, Union
 from flask import Flask, request, jsonify, render_template
+import flask
 from api_utils import handle_selected_plots
 from recommendation.recomendations_manager import get_recommendation_base_on_strategy
 from config_loader import load_config
 
-def handle_error(e, status_code=500, error_type=None):
+def handle_error(e, status_code=500, error_type=None) -> Tuple:
     """Handle an exception and return a standardized JSON error response.
 
     Parameters:
@@ -54,7 +56,7 @@ class Routes:
         def home():
             """ Renders the home page with a list of event IDs.
 
-            Output:
+            Returns:
                 Rendered HTML page or JSON error
 
             Explanation:
@@ -75,7 +77,7 @@ class Routes:
                 return handle_error(e)
 
         @self.app.route('/health')
-        def health():
+        def health()  -> Tuple[flask.Response, int]:
             """ Health check endpoint.
 
             Output:
@@ -87,7 +89,7 @@ class Routes:
             return jsonify({"status": "ok"}), 200
 
         @self.app.route('/config', methods=['GET'])
-        def get_config():
+        def get_config() -> flask.Response:
             """ Returns the current application configuration.
             Output:
                 JSON with config data or error
@@ -102,7 +104,7 @@ class Routes:
                 return handle_error(e)
 
         @self.app.route('/api/events', methods=['GET'])
-        def get_events_ids():
+        def get_events_ids() -> Tuple[flask.Response, int]:
             """ Returns a list of event IDs.
             Output:
                 JSON list of event IDs or error
@@ -131,7 +133,7 @@ class Routes:
                 return handle_error(e)
 
         @self.app.route('/api/get-event/<event_id>', methods=['GET'])
-        def get_event(event_id):
+        def get_event(event_id) ->Union[flask.Response, Tuple[flask.Response, int]]:
             """Return all data for a specific event.
 
             Parameters:
@@ -152,7 +154,7 @@ class Routes:
                 return handle_error(e)
 
         @self.app.route('/creat-track', methods=['POST'])
-        def create_track():
+        def create_track() -> flask.Response:
             """Create a smoothing spline track from selected plots.
 
             Parameters:
@@ -181,7 +183,7 @@ class Routes:
                 return handle_error(e)
 
         @self.app.route('/submit-event', methods=['POST'])
-        def submit_event():
+        def submit_event() -> Tuple[flask.Response, int]:
             """
             Finalizes an event and saves tracks + notes.
 
@@ -214,7 +216,7 @@ class Routes:
                 return handle_error(e)
 
         @self.app.route('/get-recommendation', methods=['POST'])
-        def get_recommendation_server():
+        def get_recommendation_server() -> flask.Response:
             """Return recommended tracks based on selected plots.
 
             Parameters:

@@ -1,4 +1,5 @@
 import os
+from typing import List
 import pandas as pd
 from recommendation.base import RecommendationStrategy
 from config_loader import get_config_value
@@ -8,7 +9,7 @@ from events_logic.event_cache import load_event
 EVENTS_FOLDER = get_config_value('events_folder')
 
 class TrackIDRecommendation(RecommendationStrategy):
-    def recommend(self, event_id, selected_plots):
+    def recommend(self, event_id, selected_plots) ->List[dict]:
         
         event : Event = load_event(event_id)
         plots_df = event.plots_df.copy()

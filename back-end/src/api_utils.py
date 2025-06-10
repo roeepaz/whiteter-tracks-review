@@ -1,3 +1,4 @@
+from typing import List
 import pandas as pd
 import json
 import numpy as np
@@ -8,7 +9,7 @@ from config_loader import get_config_value
 
 
 
-def minkowski_distance_plus_time(plot1, plot2, p=2, lambda_t=0.8, v_avg=1.0):
+def minkowski_distance_plus_time(plot1, plot2, p=2, lambda_t=0.8, v_avg=1.0) -> float:
     """
     Calculate Minkowski distance for two plots (x, y, z coordinates + time).
 
@@ -33,7 +34,7 @@ def minkowski_distance_plus_time(plot1, plot2, p=2, lambda_t=0.8, v_avg=1.0):
 
 from sklearn.neighbors import NearestNeighbors
 
-def estimate_local_eps(coords, idx, k=6, factor=1.5):
+def estimate_local_eps(coords, idx, k=6, factor=1.5) -> float:
     if len(coords) <= k:
         return 100.0
     nbrs = NearestNeighbors(n_neighbors=k+1).fit(coords)
@@ -41,7 +42,7 @@ def estimate_local_eps(coords, idx, k=6, factor=1.5):
     avg = np.mean(distances[:, 1:])
     return avg * factor
 
-def estimate_local_eps_with_density(plots, center_plot, radius=5000, max_eps=3000, v_avg=600,factor=3.5):
+def estimate_local_eps_with_density(plots, center_plot, radius=5000, max_eps=3000, v_avg=600,factor=3.5) -> float:
     """
     Estimate eps based on number of neighbors within a fixed spatial+temporal radius.
 
@@ -74,7 +75,7 @@ def estimate_local_eps_with_density(plots, center_plot, radius=5000, max_eps=300
 
     return eps
 
-def estimate_avg_velocity(neighbor_plots):
+def estimate_avg_velocity(neighbor_plots) -> float:
     if len(neighbor_plots) < 2:
         return 700
     total_dist, total_time = 0, 0
@@ -87,7 +88,7 @@ def estimate_avg_velocity(neighbor_plots):
             total_time += dt
     return total_dist / total_time if total_time > 0 else 1.0
 
-def estimate_velocity_from_density(neighbor_plots, max_velocity=1000, alpha=0.1):
+def estimate_velocity_from_density(neighbor_plots, max_velocity=1000, alpha=0.1) -> float:
     """
     Estimate velocity based on number of neighbor plots (density).
 
@@ -111,7 +112,7 @@ def estimate_velocity_from_density(neighbor_plots, max_velocity=1000, alpha=0.1)
 
     return velocity
 
-def handle_selected_plots(selected_plots, smoothing_factor):
+def handle_selected_plots(selected_plots, smoothing_factor) -> List:
     """Generate a smoothing spline from the user-selected plots.
 
     Parameters:
@@ -120,7 +121,7 @@ def handle_selected_plots(selected_plots, smoothing_factor):
         smoothing_factor (float): Parameter controlling spline smoothness; higher values yield smoother curves.
 
     Returns:
-        object: A spline representation (e.g., SciPy BSpline or equivalent) that interpolates the input plots.
+        List.
     """
     
     # Convert selected plots to a DataFrame
@@ -154,7 +155,7 @@ def handle_error(e, status_code=500, error_type="UnexpectedError"):
 from csaps import csaps
 from config_loader import get_config_value  
 
-def sp_line(points, u, smoothing_factor):
+def sp_line(points, u, smoothing_factor) -> List:
     """Compute a smoothing spline line for given control points.
 
     Parameters:
@@ -194,7 +195,7 @@ def sp_line(points, u, smoothing_factor):
 
 """convert methods"""
 
-def ecef_to_lla(x, y, z):
+def ecef_to_lla(x, y, z) -> tuple:
     """Convert Earth-Centered Earth-Fixed (ECEF) coordinates to geodetic latitude, longitude, and altitude.
 
     Parameters:
@@ -225,47 +226,3 @@ def ecef_to_lla(x, y, z):
     lat = np.degrees(lat)
     lon = np.degrees(lon)
     return lat, lon, alt
-
-
-def ecef_enu_vectors(latitude, longitude, altitude=0):
-    """
-    Compute the East, North, and Up unit vectors in ECEF for a given geographic location.
-    
-    Parameters:
-        latitude: Latitude in degrees.
-        longitude: Longitude in degrees.
-        altitude: Altitude in meters (default is 0).
-    
-    Returns:
-        tuple: (east_vector, north_vector, up_vector), each a unit vector in ECEF coordinates.
-    """
-    # Convert degrees to radians
-    lat_rad = np.radians(latitude)
-    lon_rad = np.radians(longitude)
-    
-    # WGS84 ellipsoid constants
-    a = 6378137.0  # Semi-major axis (m)
-    b = 6356752.314245  # Semi-minor axis (m)
-    e2 = 1 - (b**2 / a**2)  # Eccentricity squared
-    
-    # Radius of curvature in the prime vertical
-    N = a / np.sqrt(1 - e2 * np.sin(lat_rad)**2)
-    
-    # ECEF coordinates for the point (for reference)
-    x = (N + altitude) * np.cos(lat_rad) * np.cos(lon_rad)
-    y = (N + altitude) * np.cos(lat_rad) * np.sin(lon_rad)
-    z = (N * (1 - e2) + altitude) * np.sin(lat_rad)
-    
-    # Up vector (normalized normal to the ellipsoid)
-    up_vector = np.array([x, y, z])
-    up_vector /= np.linalg.norm(up_vector)
-    
-    # East vector (perpendicular to Up, pointing east)
-    east_vector = np.array([-np.sin(lon_rad), np.cos(lon_rad), 0])
-    east_vector /= np.linalg.norm(east_vector)  # Ensure it's a unit vector
-    
-    # North vector (perpendicular to both Up and East)
-    north_vector = np.cross(up_vector, east_vector)
-    north_vector /= np.linalg.norm(north_vector)  # Ensure it's a unit vector
-    
-    return east_vector, north_vector, up_vector
