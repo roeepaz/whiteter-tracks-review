@@ -77,9 +77,13 @@ class EventApi(AbstractEventsAPI):
             - Event-wide notes to 'notes.json'.
             Tracks are assigned new IDs and saved along with spline points and notes.
         """
-        EVENTS_DIR = os.path.join(get_config_value("events_folder"), event_id)
-        TRACKS_FILE = os.path.join(EVENTS_DIR, f"{get_config_value('events_tracks_file_name')}.csv")
-        CORRELATIONS_FILE = os.path.join(EVENTS_DIR, f"{get_config_value('events_plots_track_correlation_file_name')}.csv")
+        events_folder = get_config_value("events_folder")
+        events_tracks_file_name = get_config_value('events_tracks_file_name')
+        events_plots_track_correlation_file_name = get_config_value('events_plots_track_correlation_file_name')
+        
+        EVENTS_DIR = os.path.join(events_folder, event_id)
+        TRACKS_FILE = os.path.join(EVENTS_DIR, f"{events_tracks_file_name}.csv")
+        CORRELATIONS_FILE = os.path.join(EVENTS_DIR, f"{events_plots_track_correlation_file_name}.csv")
         NOTES_FILE = os.path.join(EVENTS_DIR, "notes.json")
 
         event: Event = load_event(event_id)
