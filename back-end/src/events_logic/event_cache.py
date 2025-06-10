@@ -33,14 +33,16 @@ def load_event(event_id: str) -> EventWithWhiteTracks:
     event_path = Path(EVENTS_FOLDER) / event_id
     if not event_path.exists():
         raise FileNotFoundError(f"Event '{event_id}' not found")
+    
+    plots_file = get_config_value('plots_file_name')
+    plots_correlations_file = get_config_value('plots_correlations_file_name')
+    white_tracks_file = get_config_value('events_tracks_file_name')
+    white_track_correlations_file   = get_config_value('events_plots_track_correlation_file_name')
 
-    tracks_file = get_config_value('events_tracks_file_name')
-    corr_file   = get_config_value('events_plots_track_correlation_file_name')
-
-    plots_df            = safe_csv_read(event_path / "plots.csv")
-    correlations_df         = safe_csv_read(event_path / "plots_correlations.csv")
-    white_tracks_df         = safe_csv_read(event_path / f"{tracks_file}.csv")
-    white_track_corrs_df    = safe_csv_read(event_path / f"{corr_file}.csv")
+    plots_df            = safe_csv_read(event_path / f"{plots_file}.csv")
+    correlations_df         = safe_csv_read(event_path / f"{plots_correlations_file}.csv")
+    white_tracks_df         = safe_csv_read(event_path / f"{white_tracks_file}.csv")
+    white_track_corrs_df    = safe_csv_read(event_path / f"{white_track_correlations_file}.csv")
 
     # Always produce a plots_with_tracks_id_df
     if not correlations_df.empty and {"plot_id", "system_id", "track_id"}.issubset(correlations_df.columns):

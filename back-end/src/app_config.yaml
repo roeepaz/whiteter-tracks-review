@@ -4,6 +4,8 @@
     "tags_for_white_track": ["rocket", "boom", "fighter", "terrorist"],
     "sampling_rate_per_second_for_spline": 10,
     "events_folder" : "C:/Users/roeep/OneDrive/Desktop/code-review/whiteter-tracks-review/back-end/resource/events",
+    "plots_file_name": "plots",
+    plots_correlations_file_name: "plots_correlations",
     "events_tracks_file_name" : "white_tracks",
     "events_plots_track_correlation_file_name" : "white_tracks_correlations"
   }
