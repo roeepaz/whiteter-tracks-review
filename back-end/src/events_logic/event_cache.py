@@ -5,6 +5,7 @@ from cachetools import LRUCache
 from threading import Lock
 from pathlib import Path
 from ..api_utils import safe_csv_read
+
 EVENTS_FOLDER = get_config_value("events_folder")
 _event_cache: LRUCache = LRUCache(maxsize=10)  # Cache up to 10 events
 _event_cache_lock: Lock = Lock()
@@ -17,13 +18,13 @@ def load_event(event_id: str) -> EventWithWhiteTracks:
         event_id (str): ID of the event to load.
 
     Returns:
-        Event: An Event object containing plots, white tracks, and plot–track correlations.
+        EventWithWhiteTracks: Object containing enriched plots, white tracks, and correlations.
 
     Notes:
-        - Checks if the event is already cached; if so, returns it immediately.
-        - Otherwise, reads `plots.csv`, `white_tracks.csv`, and `white_tracks_correlations.csv` from disk.
-        - Merges the correlation data into the plots DataFrame.
-        - Caches the loaded Event object before returning.
+        - Checks cache first and returns if present.
+        - Reads raw CSVs from disk.
+        - Merges `track_id` into a `plots_with_tracks_id_df`.
+        - Caches and returns the enriched Event object.
     """
     with _event_cache_lock:
         if event_id in _event_cache:
@@ -33,29 +34,31 @@ def load_event(event_id: str) -> EventWithWhiteTracks:
     if not event_path.exists():
         raise FileNotFoundError(f"Event '{event_id}' not found")
 
-    events_tracks_file_name = get_config_value('events_tracks_file_name')
-    events_plots_track_correlation_file_name = get_config_value('events_plots_track_correlation_file_name')
+    tracks_file = get_config_value('events_tracks_file_name')
+    corr_file   = get_config_value('events_plots_track_correlation_file_name')
 
-    plots_df = safe_csv_read(event_path / "plots.csv")
-    correlations_df = safe_csv_read(event_path / "plots_correlations.csv")
-    white_tracks_df = safe_csv_read(event_path / f"{events_tracks_file_name}.csv")
-    white_track_correlations_df = safe_csv_read(event_path / f"{events_plots_track_correlation_file_name}.csv")
+    plots_df            = safe_csv_read(event_path / "plots.csv")
+    correlations_df         = safe_csv_read(event_path / "plots_correlations.csv")
+    white_tracks_df         = safe_csv_read(event_path / f"{tracks_file}.csv")
+    white_track_corrs_df    = safe_csv_read(event_path / f"{corr_file}.csv")
 
-    # If correlation file is valid, merge track_id into plots
+    # Always produce a plots_with_tracks_id_df
     if not correlations_df.empty and {"plot_id", "system_id", "track_id"}.issubset(correlations_df.columns):
-        plots_df = plots_df.merge(
+        plots_with_tracks_id_df = plots_df.merge(
             correlations_df[["plot_id", "system_id", "track_id"]],
             on=["plot_id", "system_id"],
-            how="left"
+            how="left",
         )
-        plots_df["track_id"] = plots_df["track_id"].fillna(-1)
+        plots_with_tracks_id_df["track_id"] = plots_with_tracks_id_df["track_id"].fillna(-1)
+    else:
+        plots_with_tracks_id_df = plots_df.copy()
+        plots_with_tracks_id_df["track_id"] = -1
 
     event = EventWithWhiteTracks(
         event_id=event_id,
-        plots_df=plots_df,
-        plots_correlations_df=correlations_df,
+        plots_df=plots_with_tracks_id_df,
         white_tracks_df=white_tracks_df,
-        white_track_correlations_df=white_track_correlations_df
+        white_track_correlations_df=white_track_corrs_df
     )
 
     with _event_cache_lock:

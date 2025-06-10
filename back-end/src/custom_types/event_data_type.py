@@ -5,7 +5,6 @@ import datetime
 class Event:
     event_id: str
     plots_df: pd.DataFrame
-    plots_correlations_df: pd.DataFrame
     
 @dataclass
 class EventWithWhiteTracks(Event):
