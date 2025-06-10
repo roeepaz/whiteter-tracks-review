@@ -7,7 +7,7 @@ from recommendation.motion_vector_recommendation.validation import is_valid_clus
 from recommendation.utils import compute_local_eps, compute_local_v_avg
 from api_utils import minkowski_distance_plus_time
 from events_logic.event_cache import load_event
-from custom_types import Event
+from custom_types import EventWithWhiteTracks
 import pandas as pd
 class MotionVectorRecommendation(RecommendationStrategy): 
     def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
@@ -27,7 +27,7 @@ class MotionVectorRecommendation(RecommendationStrategy):
             - Clusters remaining plots adaptively and matches them to user clusters.
         """
         print("\nStarting motion vector recommendation...")
-        event_data : Event = load_event(event_id)
+        event_data : EventWithWhiteTracks = load_event(event_id)
 
         df_plots = event_data.plots_df.copy()
         df_plots['plot_id'] = df_plots['plot_id'].astype(int)

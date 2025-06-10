@@ -3,12 +3,12 @@ import pandas as pd
 import os
 from config_loader import get_config_value
 from recommendation.base import RecommendationStrategy
-from custom_types import Event
+from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event
 class STNRecommendation(RecommendationStrategy):
     def recommend(self, event_id, selected_plots) -> List[dict]:
         
-        event : Event = load_event(event_id)
+        event : EventWithWhiteTracks = load_event(event_id)
         plots_df = event.plots_df.copy()
         
         

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Any
-from custom_types import Event
+from custom_types import EventWithWhiteTracks
 
 class AbstractEventsAPI(ABC):
     @abstractmethod
@@ -13,7 +13,7 @@ class AbstractEventsAPI(ABC):
         pass
 
     @abstractmethod
-    def get_event_data(self, event_id: str) -> Event:
+    def get_event_data(self, event_id: str) -> EventWithWhiteTracks:
         """Retrieve data for a specific event.
 
         Parameters:

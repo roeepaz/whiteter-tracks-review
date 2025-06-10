@@ -4,7 +4,7 @@ from typing import List
 from recommendation.base import RecommendationStrategy
 from api_utils import minkowski_distance_plus_time
 from recommendation.utils import compute_local_eps, compute_local_v_avg
-from custom_types import Event
+from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event
 from recommendation.build_tree_cache import (
     build_kdtree_with_cache,
@@ -29,7 +29,7 @@ class DBSCANRecommendation(RecommendationStrategy):
             - Computes local parameters (v_avg, eps) per plot.
             - Expands clusters from each root using a density‐based metric combining spatial and temporal distance.
         """
-        event_data: Event = load_event(event_id)
+        event_data: EventWithWhiteTracks = load_event(event_id)
         if event_data is None or event_id != event_data.event_id:
             raise ValueError("Event not loaded. Please load it first from the UI.")
 

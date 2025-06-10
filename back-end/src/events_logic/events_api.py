@@ -6,7 +6,7 @@ import os
 from flask import jsonify
 from config_loader import get_config_value
 from events_logic.interface.AbstractEventsAPI import AbstractEventsAPI
-from custom_types import Event
+from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event, clear_event
 
 EVENTS_FOLDER = get_config_value('events_folder')
@@ -80,13 +80,13 @@ class EventApi(AbstractEventsAPI):
         events_folder = get_config_value("events_folder")
         events_tracks_file_name = get_config_value('events_tracks_file_name')
         events_plots_track_correlation_file_name = get_config_value('events_plots_track_correlation_file_name')
-        
+
         EVENTS_DIR = os.path.join(events_folder, event_id)
         TRACKS_FILE = os.path.join(EVENTS_DIR, f"{events_tracks_file_name}.csv")
         CORRELATIONS_FILE = os.path.join(EVENTS_DIR, f"{events_plots_track_correlation_file_name}.csv")
         NOTES_FILE = os.path.join(EVENTS_DIR, "notes.json")
 
-        event: Event = load_event(event_id)
+        event: EventWithWhiteTracks = load_event(event_id)
         full_plots_df = event.plots_df.copy()
         all_tracks = []
         next_track_id = get_new_track_id(event)
@@ -120,7 +120,7 @@ class EventApi(AbstractEventsAPI):
         clear_event(event_id)
 
 
-def get_new_track_id(event: Event) -> int:
+def get_new_track_id(event: EventWithWhiteTracks) -> int:
     """Determines the next available track ID.
 
     Parameters:

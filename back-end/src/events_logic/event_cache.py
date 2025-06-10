@@ -1,5 +1,5 @@
 from typing import Dict
-from custom_types import Event
+from custom_types import EventWithWhiteTracks
 from config_loader import get_config_value
 import os
 import pandas as pd
@@ -10,7 +10,7 @@ EVENTS_FOLDER = get_config_value("events_folder")
 _event_cache: LRUCache = LRUCache(maxsize=10)  # Cache up to 10 events
 _event_cache_lock: Lock = Lock()
 
-def load_event(event_id: str) -> Event:
+def load_event(event_id: str) -> EventWithWhiteTracks:
     """Load event data from disk or cache.
 
     Parameters:
@@ -50,7 +50,7 @@ def load_event(event_id: str) -> Event:
         )
         plots_df["track_id"] = plots_df["track_id"].fillna(-1)
 
-    event = Event(
+    event = EventWithWhiteTracks(
         event_id=event_id,
         plots_df=plots_df,
         plots_correlations_df=correlations_df,
