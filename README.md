@@ -61,8 +61,9 @@ Use config_loader.get_config_value(key) in code to access values.
 ## Documentation
 
 - **Flask App Overview**: [back-end/docs/flask_overview.md](back-end/docs/flask_overview.md)
+---
 
-API Endpoints:
+## API Endpoints:
 
 GET /health
 
