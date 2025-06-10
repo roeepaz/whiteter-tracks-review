@@ -10,37 +10,33 @@ _kdtree_cache: LRUCache = LRUCache(maxsize=10)
 _kdtree_lock: Lock = Lock()
 
 def df_hash(df: pd.DataFrame) -> str:
+    """Generate a stable MD5 hash for a DataFrame.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame to compute the hash for.
+
+    Returns:
+        str: MD5 hash string representing the DataFrame’s content, suitable as a cache key.
     """
-    Generate a stable hash for a DataFrame to use as a cache key.
-
-    Input:
-        df: pd.DataFrame -  The DataFrame to hash
-
-    Output:
-        str - MD5 hash string
-
-    Explanation:
-        Creates a hash based on DataFrame content to use for caching KDTree results.
-    """
-    return hashlib.md5(pd.util.hash_pandas_object(df, index=True).values).hexdigest()
-
+    return hashlib.md5(
+        pd.util.hash_pandas_object(df, index=True).values
+    ).hexdigest()
 
 def build_kdtree_with_cache(df: pd.DataFrame, time_weight: float = 1.0) -> Tuple[KDTree, List[Tuple[int, int]]]:
-    """
-    Build or retrieve a cached KDTree and associated keys from a DataFrame.
+    """Build or retrieve a cached 4D KDTree with time-weighted coordinates.
 
-    Input:
-        df: pd.DataFrame - The source DataFrame with x, y, z, t
-        time_weight: float - A multiplier for the time dimension
+    Parameters:
+        df (pd.DataFrame): Source DataFrame containing columns 'x', 'y', 'z', and 't'.
+        time_weight (float): Multiplier applied to the time dimension (default is 1.0).
 
-    Output:
-        Tuple of:
-            - KDTree - 4D KDTree with time-weighted coordinates
-            - List of keys (plot_id, system_id) for all rows
+    Returns:
+        Tuple[KDTree, List[Tuple[int, int]]]:
+            - KDTree: A tree built on coordinates [x, y, z, t * time_weight].
+            - List[Tuple[int, int]]: Keys for each row as (plot_id, system_id).
 
-    Explanation:
-        Builds a KDTree on 4D coordinates (x, y, z, t*time_weight) and caches it using a stable hash.
-        Thread-safe with a lock to support parallel requests.
+    Notes:
+        - Computes a stable hash of the DataFrame to use as a cache key.
+        - Uses a thread-safe lock to guard concurrent cache access.
     """
     key = df_hash(df)
 
@@ -66,26 +62,25 @@ def filter_relevant_plots(
     tree: KDTree,
     all_keys: List[Tuple[int, int]],
     selected_plots: List[Dict],
-    radius: float = 15_000,
+    radius: float = 15000,
     time_weight: float = 1.0
 ) -> pd.DataFrame:
-    """
-    Filter plots in df that are within a 4D radius of selected_plots using an existing KDTree.
+    """Filter plots within a time-weighted 4D radius of selected plots.
 
-    Input:
-        df: pd.DataFrame - All plots
-        tree: KDTree - KDTree built from df
-        all_keys: List[Tuple[int, int]] - (plot_id, system_id) for each plot
-        selected_plots: List[dict] - User-selected plots
-        radius: float - Search radius in 4D
-        time_weight: float - Weight applied to time dimension
+    Parameters:
+        df (pd.DataFrame): DataFrame of all plots with columns ['x', 'y', 'z', 't'].
+        tree (KDTree): KDTree built on coordinates [x, y, z, t * time_weight].
+        all_keys (List[Tuple[int, int]]): List of (plot_id, system_id) tuples matching df rows.
+        selected_plots (List[dict]): List of plot dicts with keys 'x', 'y', 'z', 't'.
+        radius (float): Search radius in the 4D space (default: 15000).
+        time_weight (float): Multiplier for the time dimension (default: 1.0).
 
-    Output:
-        pd.DataFrame - Filtered DataFrame of relevant plots
+    Returns:
+        pd.DataFrame: Subset of df containing all plots found within the given radius of any selected plot.
 
-    Explanation:
-        For each selected plot, finds nearby points using KDTree in 4D space.
-        Returns only those points in the original df that fall within this radius.
+    Notes:
+        - Queries the KDTree for each selected plot to find neighbors in 4D.
+        - Maps neighbor indices back to df via all_keys.
     """
     if not selected_plots:
         raise ValueError("selected_plots must not be empty")

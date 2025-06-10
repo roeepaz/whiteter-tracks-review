@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from recommendation.base import RecommendationStrategy
 from recommendation.motion_vector_recommendation.clustering import split_initial_clusters, expand_cluster, custom_adaptive_dbscan
@@ -9,23 +10,23 @@ from events_logic.event_cache import load_event
 from custom_types import Event
 import pandas as pd
 class MotionVectorRecommendation(RecommendationStrategy): 
-    def recommend(self, event_id, selected_plots):
-        """
-        Generates motion vector-based track recommendations.
+    def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
+        """Generate motion vector–based track recommendations.
 
-        Input:
-            event_id: str - ID of the event to analyze
-            selected_plots: list[dict] - User-selected seed plots
+        Parameters:
+            event_id (str): ID of the event to analyze.
+            selected_plots (List[dict]): User-selected seed plots.
 
-        Output:
-            list[dict] - Recommended plots with assigned clusters
+        Returns:
+            List[dict]: Recommended plot records with assigned cluster IDs.
 
-        Explanation:
-            Loads all plots, computes motion vectors, splits/expands user clusters,
-            clusters the rest of the plots, and matches event clusters to user clusters.
+        Notes:
+            - Loads all event plots via `load_event`.
+            - Computes motion vectors for each selected cluster.
+            - Splits and expands clusters based on motion vector continuity.
+            - Clusters remaining plots adaptively and matches them to user clusters.
         """
         print("\nStarting motion vector recommendation...")
-
         event_data : Event = load_event(event_id)
 
         df_plots = event_data.plots_df.copy()
@@ -57,22 +58,30 @@ class MotionVectorRecommendation(RecommendationStrategy):
         print(f"\nTotal recommended plots: {len(final_df)}")
         return final_df.to_dict(orient='records')
         
-    def _prepare_user_clusters(self, df_plots, selected_plots, min_size=7, max_attempts=9):
-        """
-        Builds and validates user clusters using motion vectors.
+    def _prepare_user_clusters(
+        self,
+        df_plots: pd.DataFrame,
+        selected_plots: List[dict],
+        min_size: int = 7,
+        max_attempts: int = 9
+    ) -> pd.DataFrame:
+        """Build and validate user clusters using motion vectors.
 
-        Input:
-            df_plots: DataFrame - All event plots
-            selected_plots: list[dict] - User input
-            min_size: int - Minimum size for a valid cluster
-            max_attempts: int - Attempts to expand invalid clusters
+        Parameters:
+            df_plots (pd.DataFrame): DataFrame of all event plots.
+            selected_plots (List[dict]): User-selected seed plots.
+            min_size (int): Minimum number of plots for a valid cluster (default: 7).
+            max_attempts (int): Maximum attempts to expand invalid clusters (default: 9).
 
-        Output:
-            DataFrame - Plots with updated 'cluster', 'vector', 'center_of_mass'
+        Returns:
+            pd.DataFrame: The same DataFrame with updated columns:
+                - 'cluster': assigned cluster IDs,
+                - 'vector': computed motion vectors,
+                - 'center_of_mass': cluster centers.
 
-        Explanation:
-            Splits user-selected plots into subclusters, validates and expands each one if needed.
-            Valid clusters are assigned IDs and motion vectors.
+        Notes:
+            - Splits user-selected plots into subclusters.
+            - Validates each cluster by size and expands with motion vectors if too small.
         """
         print("\nSplitting and validating user clusters...")
         subgroups, _ = split_initial_clusters(selected_plots, df_plots, df_plots[['x','y','z']].values)
@@ -123,19 +132,18 @@ class MotionVectorRecommendation(RecommendationStrategy):
 
         return df_plots
 
-    def _cluster_remaining_plots(self, df_plots):
-        """
-        Clusters the remaining unassigned plots using adaptive DBSCAN.
+    def _cluster_remaining_plots(self, df_plots: pd.DataFrame) -> pd.DataFrame:
+        """Cluster the remaining unassigned plots using adaptive DBSCAN.
 
-        Input:
-            df_plots: DataFrame - All event plots with some already clustered
+        Parameters:
+            df_plots (pd.DataFrame): DataFrame of all event plots; some rows may already have a 'cluster' value.
 
-        Output:
-            DataFrame - Same plots with 'cluster' values updated
+        Returns:
+            pd.DataFrame: The same DataFrame with updated 'cluster' values for previously unassigned plots.
 
-        Explanation:
-            Runs DBSCAN-like clustering with adaptive eps and v_avg on unassigned plots.
-            Assigns high cluster IDs (starting from 1000) to these clusters.
+        Notes:
+            - Runs a DBSCAN‐style algorithm with locally adaptive `eps` and `v_avg` on the unclustered points.
+            - Assigns new cluster IDs starting from 1000 for these additional clusters.
         """
         print("\nClustering remaining event plots...")
         df_remaining = df_plots[df_plots['cluster'] == -1]
@@ -160,19 +168,19 @@ class MotionVectorRecommendation(RecommendationStrategy):
 
         return df_plots
 
-    def _match_clusters(self, df_plots):
-        """
-        Matches system-generated event clusters to user clusters based on motion similarity.
+    def _match_clusters(self, df_plots: pd.DataFrame) -> pd.DataFrame:
+        """Match system-generated event clusters to user clusters based on motion similarity.
 
-        Input:
-            df_plots: DataFrame - Plots with both user and event clusters
+        Parameters:
+            df_plots (pd.DataFrame): DataFrame containing plots with both user-assigned and system-generated cluster IDs.
 
-        Output:
-            DataFrame - Merged clusters (event clusters may be reassigned to user clusters)
+        Returns:
+            pd.DataFrame: Updated DataFrame where event cluster IDs have been reassigned to match user cluster IDs when similarity criteria are met.
 
-        Explanation:
-            For each user cluster, compares its future-predicted position to candidate event clusters.
-            If match is good (based on dynamic distance threshold), reassigns the event cluster to the user cluster ID.
+        Notes:
+            - For each user cluster, compute its predicted future position.
+            - Compare these predictions to each event cluster’s motion path.
+            - If the distance falls within a dynamic threshold, reassign the event cluster’s ID to the corresponding user cluster ID.
         """
         print("\nMatching user clusters with event clusters...")
 
@@ -274,82 +282,36 @@ class MotionVectorRecommendation(RecommendationStrategy):
 
         return df_plots
     
-    def _find_cluster_indices(self, df_plots, cluster):
-        """
-        Finds index locations in df_plots for plots in a cluster.
+    def _find_cluster_indices(
+        self,
+        df_plots: pd.DataFrame,
+        cluster: List[dict]
+    ) -> List[int]:
+        """Find DataFrame indices corresponding to a cluster of plots.
 
-        Input:
-            df_plots: DataFrame - Event plots
-            cluster: list[dict] - Plot dicts with 'plot_id' and 'system_id'
+        Parameters:
+            df_plots (pd.DataFrame): DataFrame of event plots, must include 'plot_key'.
+            cluster (List[dict]): Plot dicts with keys 'plot_id' and 'system_id'.
 
-        Output:
-            list[int] - Indices in the DataFrame
-
-        Explanation:
-            Converts plot keys to tuples and looks them up in the DataFrame.
+        Returns:
+            List[int]: List of indices in `df_plots` that match the given cluster.
         """
         cluster_keys = {(p['plot_id'], p['system_id']) for p in cluster}
         return df_plots[df_plots['plot_key'].isin(cluster_keys)].index.tolist()
 
-    def _predict_multiple_centers(self, u_vec, u_center, dt, num_steps=3):
+    def _dynamic_deflection_limit(
+        self,
+        dt: float
+    ) -> float:
+        """Compute dynamic deflection limit based on time delta.
+
+        Parameters:
+            dt (float): Time difference between user and event clusters.
+
+        Returns:
+            float: Maximum allowed deflection distance, capped by a predetermined maximum.
         """
-        Predicts multiple future centers of mass.
-
-        Input:
-            u_vec: Vector - Motion vector
-            u_center: Center - Current center of mass
-            dt: float - Total time delta
-            num_steps: int - Number of prediction steps
-
-        Output:
-            list[Center]  Predicted future centers
-
-        Explanation:
-            Divides time into equal steps and projects future centers using vector.
-        """
-        predicted_centers = []
-        time_step = dt / num_steps
-        for step in range(1, num_steps + 1):
-            future_time = step * time_step
-            predicted = calc_future_center_of_mass(u_vec, u_center, future_time)
-            predicted_centers.append(predicted)
-        return predicted_centers
-
-    def _compute_avg_distance(self, predicted_centers, e_center, v_avg):
-        """
-        Computes average spatial-temporal distance between predicted and actual center.
-
-        Input:
-            predicted_centers: list[Center]  Predicted centers
-            e_center: Center  Actual cluster center
-            v_avg: float  Average velocity for distance adjustment
-
-        Output:
-            float  Average distance
-
-        Explanation:
-            Uses Minkowski+time distance to calculate average deflection from prediction to actual.
-        """
-        total_dist = 0
-        for predicted in predicted_centers:
-            dist = calc_distance_between_two_center_mass(predicted, e_center, v_avg, lambda_t=1)
-            total_dist += dist
-        return total_dist / len(predicted_centers)
-
-    def _dynamic_deflection_limit(self, dt):
-        """
-        Dynamically computes max allowed deflection based on time delta.
-
-        Input:
-            dt: float  Time difference between user and event clusters
-
-        Output:
-            float  Dynamic distance threshold
-
-        Explanation:
-            Linear formula with cap: base + per-second growth, up to a maximum.
-        """
-        base_deflection = 6_000
+        base_deflection = 6000
         deflection_per_second = 750
-        max_deflection = 9_000
+        max_deflection = 9000
         return min(base_deflection + deflection_per_second * dt, max_deflection)

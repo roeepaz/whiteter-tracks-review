@@ -11,19 +11,19 @@ _event_cache: LRUCache = LRUCache(maxsize=10)  # Cache up to 10 events
 _event_cache_lock: Lock = Lock()
 
 def load_event(event_id: str) -> Event:
-    """
-    Loads event data from disk or cache.
+    """Load event data from disk or cache.
 
-    Input:
-        event_id: str – The ID of the event to load
+    Parameters:
+        event_id (str): ID of the event to load.
 
-    Output:
-        Event – An Event object with plots and track data loaded
+    Returns:
+        Event: An Event object containing plots, white tracks, and plot–track correlations.
 
-    Explanation:
-        Checks if the event is already cached. If not, loads all relevant CSV files from disk,
-        including plots, correlations, and white tracks. Merges correlations into the plots DataFrame.
-        Then caches and returns the loaded Event object.
+    Notes:
+        - Checks if the event is already cached; if so, returns it immediately.
+        - Otherwise, reads `plots.csv`, `white_tracks.csv`, and `white_tracks_correlations.csv` from disk.
+        - Merges the correlation data into the plots DataFrame.
+        - Caches the loaded Event object before returning.
     """
     with _event_cache_lock:
         if event_id in _event_cache:
@@ -63,18 +63,15 @@ def load_event(event_id: str) -> Event:
 
     return event
 
-def clear_event(event_id: str):
-    """
-    Clears a specific event from the cache.
+def clear_event(event_id: str) -> None:
+    """Clear a specific event from the cache.
 
-    Input:
-        event_id: str – The ID of the event to remove from the cache
+    Parameters:
+        event_id (str): ID of the event to remove from the cache.
 
-    Output:
-        None
-
-    Explanation:
-        Thread-safe removal of an event from the LRU cache to free memory or force reload next time.
+    Notes:
+        Thread-safe removal of an event from the LRU cache to free memory
+        or force a reload on next access.
     """
     with _event_cache_lock:
         _event_cache.pop(event_id, None)

@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+from typing import List
 from recommendation.base import RecommendationStrategy
 from api_utils import minkowski_distance_plus_time
 from recommendation.utils import compute_local_eps, compute_local_v_avg
@@ -12,20 +12,22 @@ from recommendation.build_tree_cache import (
 )
 
 class DBSCANRecommendation(RecommendationStrategy):
-    def recommend(self, event_id, selected_plots):
-        """
-        Performs DBSCAN-like clustering on relevant plots.
+    def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
+        """Perform DBSCAN-like clustering on relevant plots.
 
-        Input:
-            event_id: str - The ID of the event to analyze
-            selected_plots: list[dict] - List of user-selected plots to start clustering from
+        Parameters:
+            event_id (str): ID of the event to analyze.
+            selected_plots (List[dict]): User-selected plots to start clustering from.
 
-        Output:
-            list[dict] - Plots that were clustered, each with a 'cluster' field
+        Returns:
+            List[dict]: Clustered plots, each containing a 'cluster' field.
 
-        Explanation:
-            Loads the event data, builds a KDTree, filters nearby plots, computes local parameters (v_avg, eps),
-            and expands clusters from each selected root using a density-based approach with time + space distance.
+        Notes:
+            - Loads event data via `load_event`.
+            - Builds or retrieves a KDTree of all plots.
+            - Filters nearby plots around each selected root.
+            - Computes local parameters (v_avg, eps) per plot.
+            - Expands clusters from each root using a density‐based metric combining spatial and temporal distance.
         """
         event_data: Event = load_event(event_id)
         if event_data is None or event_id != event_data.event_id:
@@ -67,19 +69,18 @@ class DBSCANRecommendation(RecommendationStrategy):
 
         return df[df['cluster'] != -1].to_dict(orient='records')
 
-    def _find_plot_index(self, df, plot):
-        """
-        Finds the row index of a given plot in the DataFrame.
+    def _find_plot_index(self, df: pd.DataFrame, plot: dict) -> int:
+        """Find the row index of a given plot in the DataFrame.
 
-        Input:
-            df: DataFrame - DataFrame containing plot data
-            plot: dict - Plot to locate (must contain 'plot_id' and 'system_id')
+        Parameters:
+            df (pd.DataFrame): DataFrame containing plot data.
+            plot (dict): Plot record, must include 'plot_id' and 'system_id' keys.
 
-        Output:
-            int - Index of the matching plot
+        Returns:
+            int: Index of the matching plot row in `df`.
 
-        Explanation:
-            Searches for a plot in the DataFrame using both plot_id and system_id.
+        Raises:
+            ValueError: If no matching plot is found.
         """
         matches = df[
             (df['plot_id'] == plot['plot_id']) &
@@ -89,18 +90,28 @@ class DBSCANRecommendation(RecommendationStrategy):
             raise ValueError(f"Root plot not found: {plot}")
         return matches.index[0]
 
-    def _expand_cluster(self, df, root_idx, cluster_id, lambda_t):
-        """
-        Expands a cluster starting from a root plot using breadth-first search (BFS).
+    def _expand_cluster(
+        self,
+        df: pd.DataFrame,
+        root_idx: int,
+        cluster_id: int,
+        lambda_t: float
+    ) -> None:
+        """Expand a cluster from a root plot using breadth-first search.
 
-        Args:
-            df (DataFrame): DataFrame containing plot data with 'v_avg', 'eps', and 'cluster' columns.
+        Parameters:
+            df (pd.DataFrame): DataFrame containing plot data with columns
+                'v_avg', 'eps', and 'cluster'.
             root_idx (int): Index of the root plot to start expansion.
-            cluster_id (int): ID to assign to all plots in the cluster.
-            lambda_t (float): Time weighting factor for the distance calculation.
+            cluster_id (int): Cluster ID to assign to all reachable plots.
+            lambda_t (float): Time weight factor for the distance calculation.
 
         Returns:
-            None: The function modifies df in-place by assigning cluster IDs.
+            None: Modifies `df` in place by assigning `cluster_id` to each plot.
+
+        Notes:
+            - Uses each plot’s local `eps` and `v_avg` to decide connectivity.
+            - Performs a BFS, enqueuing neighbors within the time-weighted Minkowski distance.
         """
         queue = [root_idx]
         visited = set(queue)

@@ -112,7 +112,16 @@ def estimate_velocity_from_density(neighbor_plots, max_velocity=1000, alpha=0.1)
     return velocity
 
 def handle_selected_plots(selected_plots, smoothing_factor):
-    """Processes selected plots and generates a spline."""
+    """Generate a smoothing spline from the user-selected plots.
+
+    Parameters:
+        selected_plots (list[dict]): List of plot records, each containing spatial and temporal fields
+            (e.g., keys 'x', 'y', 'z', 't').
+        smoothing_factor (float): Parameter controlling spline smoothness; higher values yield smoother curves.
+
+    Returns:
+        object: A spline representation (e.g., SciPy BSpline or equivalent) that interpolates the input plots.
+    """
     
     # Convert selected plots to a DataFrame
     selected_plots_df = pd.DataFrame(selected_plots)
@@ -146,8 +155,18 @@ from csaps import csaps
 from config_loader import get_config_value  
 
 def sp_line(points, u, smoothing_factor):
-    # Apply csaps to get a smooth spline across the points
-    # 'u' here represents a normalized parameter for the curve progression
+    """Compute a smoothing spline line for given control points.
+
+    Parameters:
+        points (Sequence[Sequence[float]]): Sequence of control points, each specified as a coordinate sequence
+            (e.g., [x, y, z]).
+        u (array-like): Parameter values at which to evaluate the spline (e.g., a linspace between 0 and 1).
+        smoothing_factor (float): Positive smoothing factor for the spline algorithm; larger values yield smoother curves.
+
+    Returns:
+        numpy.ndarray: Array of evaluated spline points with shape (len(u), dims).
+    """
+
      # Ensure `u` is sorted and remove duplicates
     u, unique_indices = np.unique(u, return_index=True)
     
@@ -174,8 +193,21 @@ def sp_line(points, u, smoothing_factor):
     return spline_points
 
 """convert methods"""
-# Assuming df is your DataFrame with ECEF columns x, y, z
+
 def ecef_to_lla(x, y, z):
+    """Convert Earth-Centered Earth-Fixed (ECEF) coordinates to geodetic latitude, longitude, and altitude.
+
+    Parameters:
+        x (float): ECEF X coordinate in meters.
+        y (float): ECEF Y coordinate in meters.
+        z (float): ECEF Z coordinate in meters.
+
+    Returns:
+        tuple[float, float, float]:  
+            latitude (float): Geodetic latitude in decimal degrees.  
+            longitude (float): Geodetic longitude in decimal degrees.  
+            altitude (float): Height above the WGS84 ellipsoid in meters.
+    """
     a = 6378137  # Equatorial radius
     f = 1 / 298.257223563  # Flattening
     e2 = 2 * f - f ** 2  # Eccentricity squared

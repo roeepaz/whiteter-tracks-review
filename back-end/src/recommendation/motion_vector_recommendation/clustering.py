@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Optional, Tuple
 from collections import deque, defaultdict
 import numpy as np
 import pandas as pd
@@ -7,23 +7,28 @@ from api_utils import minkowski_distance_plus_time
 from recommendation.build_tree_cache import build_kdtree_with_cache
 
 
-def split_initial_clusters(selected_plots: List[dict], df_plots, coords, lambda_t: float = 0.8):
-    """
-    Clusters user-selected plots using space+time distance.
+def split_initial_clusters(
+    selected_plots: List[dict],
+    df_plots: pd.DataFrame,
+    coords: np.ndarray,
+    lambda_t: float = 0.8
+) -> Tuple[List[List[dict]], List[Tuple[float, float]]]:
+    """Cluster user-selected plots using space-time distance.
 
-    Input:
-        selected_plots: List[dict] - Plots selected by the user
-        df_plots: DataFrame - All event plots
-        coords: ndarray - Coordinates (x, y, z) of plots
-        lambda_t: float - Time distance weight
+    Parameters:
+        selected_plots (List[dict]): List of user-selected plot records.
+        df_plots (pd.DataFrame): DataFrame of all event plots.
+        coords (np.ndarray): Array of shape (N, 3) with [x, y, z] coordinates.
+        lambda_t (float): Time-weight factor for distance calculation (default 0.8).
 
-    Output:
-        List[List[dict]] - Clusters of plots
-        List[Tuple[float, float]] - Parameters (eps, v_avg) for each cluster
+    Returns:
+        Tuple[List[List[dict]], List[Tuple[float, float]]]:
+            - First element: list of clusters, each a list of plot dicts.
+            - Second element: list of (eps, v_avg) tuples for each cluster.
 
-    Explanation:
-        Uses BFS to group selected plots into spatial-temporal clusters.
-        Clusters are assigned incrementally and stored in df_plots.
+    Notes:
+        - Performs a BFS expansion to group plots that are close in both space and time.
+        - Assigns cluster IDs in-place on `df_plots` as it builds each cluster.
     """
     clustered_ids = set()
     clusters = []
@@ -82,26 +87,26 @@ def expand_cluster(
     df_plots: pd.DataFrame,
     eps: float,
     v_avg: float,
-    extra_candidates=None,
+    extra_candidates: Optional[List[List[dict]]] = None,
     max_d: float = 7000
-):
-    """
-    Expands a small user cluster by absorbing nearby plots.
+) -> List[dict]:
+    """Expand a user cluster by absorbing nearby plots.
 
-    Input:
-        cluster: List[dict] - Initial cluster
-        df_plots: DataFrame - All event plots
-        eps: float - Expansion radius based on density
-        v_avg: float - Average speed for time-weighted distance
-        extra_candidates: Optional[List[List[dict]]] - Other small clusters to pull from
-        max_d: float - Max allowed Euclidean distance from center
+    Parameters:
+        cluster (List[dict]): Initial list of plot records assigned to the cluster.
+        df_plots (pd.DataFrame): DataFrame containing all event plot data.
+        eps (float): Expansion radius based on local density.
+        v_avg (float): Average speed used for time-weighted distance calculation.
+        extra_candidates (Optional[List[List[dict]]]): Additional small clusters to consider for expansion.
+        max_d (float): Maximum allowed Euclidean distance from the cluster center (default: 7000).
 
-    Output:
-        List[dict] - Expanded cluster
+    Returns:
+        List[dict]: The expanded cluster as a list of plot records.
 
-    Explanation:
-        Performs BFS expansion using both Minkowski+time and Euclidean distance
-        to grow the cluster and update the 'cluster' column in df_plots.
+    Notes:
+        - Uses breadth-first search to include neighboring plots that satisfy both
+          the Minkowski+time distance criteria and the Euclidean distance limit.
+        - Updates the 'cluster' column in `df_plots` to reflect newly added plots.
     """
     expanded = list(cluster)
     queue = deque(cluster)
@@ -160,24 +165,24 @@ def custom_adaptive_dbscan(
     min_samples: int = 5,
     lambda_t: float = 0.8
 ) -> np.ndarray:
-    """
-    Adaptive DBSCAN clustering based on local eps and velocity.
+    """Perform adaptive DBSCAN clustering using local eps and velocity.
 
-    Input:
-        df_plots: DataFrame - All event plots
-        plots: List[dict] - Records version of df_plots
-        v_avg_list: np.ndarray - Local average speed for each plot
-        eps_list: np.ndarray - Local eps value for each plot
-        max_dist_from_root: float - KDTree search radius
-        min_samples: int - Minimum density for core point
-        lambda_t: float - Time weight for distance function
+    Parameters:
+        df_plots (pd.DataFrame): DataFrame containing all event plots.
+        plots (List[Dict]): List of plot records corresponding to `df_plots`.
+        v_avg_list (np.ndarray): Array of local average speeds for each plot.
+        eps_list (np.ndarray): Array of local epsilon values for each plot.
+        max_dist_from_root (float): KDTree search radius for neighbors (default: 15000).
+        min_samples (int): Minimum number of samples to form a core point (default: 5).
+        lambda_t (float): Weight for the temporal dimension in distance calculation (default: 0.8).
 
-    Output:
-        np.ndarray - Cluster assignments (-1 for noise)
+    Returns:
+        np.ndarray: Cluster labels for each plot (−1 indicates noise).
 
-    Explanation:
-        Builds a KDTree and uses a modified DBSCAN approach,
-        where eps and v_avg are adaptive for each point. Uses time + spatial distance.
+    Notes:
+        - Builds a KDTree over coordinates [x, y, z, t * lambda_t].
+        - Adapts `eps` and `v_avg` per point for clustering.
+        - Uses a combined spatial–temporal distance metric.
     """
     n = len(plots)
     cluster_array = np.full(n, -1)

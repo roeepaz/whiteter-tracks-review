@@ -8,69 +8,55 @@ from recommendation.recomendations_manager import get_recommendation_base_on_str
 CONFIG_PATH = os.path.join(os.path.dirname(__file__),"app_config.json")
 
 def handle_error(e, status_code=500, error_type=None):
+    """Handle an exception and return a standardized JSON error response.
+
+    Parameters:
+        e (Exception): The exception that was raised.
+        status_code (int): HTTP status code to return. Defaults to 500.
+        error_type (str, optional): Custom error type identifier.
+
+    Returns:
+        tuple[flask.Response, int]: A JSON response with structure 
+            {
+                "success": False,
+                "error": {
+                    "type": error_type or type(e).__name__,
+                    "message": str(e)
+                }
+            }
+        and the HTTP status code.
     """
-    Handles error formatting for consistent JSON responses.
-
-    Input:
-        e: Exception - The exception to handle
-        status_code: int - HTTP status code to return (default: 500)
-        error_type: str (optional) - Custom error type
-
-    Output:
-        JSON response with success=False, error type and message
-
-    Explanation:
-        Prints error and returns standardized error response for the client.
-    """
-    print(f"[ERROR] {type(e).__name__}: {str(e)}")
-    return jsonify({
+    print(f"[ERROR] {type(e).__name__}: {e}")
+    error_payload = {
         "success": False,
         "error": {
-            "type": error_type if error_type else type(e).__name__,
+            "type": error_type or type(e).__name__,
             "message": str(e)
         }
-    }), status_code
+    }
+    return jsonify(error_payload), status_code
 
 
 class Routes:
     def __init__(self, app: Flask, event_methods_instance):
-        """
-        Initializes the Routes handler.
+        """Initialize the Routes handler by registering all Flask routes.
 
-        Input:
-            app: Flask - Flask app instance
-            event_methods_instance - Object that handles event logic (e.g. EventApi)
-
-        Output:
-            None
-
-        Explanation:
-            Saves references and sets up all Flask routes.
+        Parameters:
+            app (Flask): The Flask application instance.
+            event_methods_instance (AbstractEventsAPI): Object that handles event logic (e.g., EventApi).
         """
         self.app = app
         self.handler = event_methods_instance
         self.setup_routes()
 
     def setup_routes(self):
-        """
-        Defines all HTTP routes for the Flask app.
-
-        Input:
-            None
-
-        Output:
-            None
-
+        """ Defines all HTTP routes for the Flask app.
         Explanation:
             Registers endpoints for UI, API, track creation, recommendations, and event management.
         """
         @self.app.route('/')
         def home():
-            """
-            Renders the home page with a list of event IDs.
-
-            Input:
-                None
+            """ Renders the home page with a list of event IDs.
 
             Output:
                 Rendered HTML page or JSON error
@@ -96,11 +82,7 @@ class Routes:
 
         @self.app.route('/health')
         def health():
-            """
-            Health check endpoint.
-
-            Input:
-                None
+            """ Health check endpoint.
 
             Output:
                 JSON {"status": "ok"} with HTTP 200
@@ -112,12 +94,7 @@ class Routes:
 
         @self.app.route('/config', methods=['GET'])
         def get_config():
-            """
-            Returns the current application configuration.
-
-            Input:
-                None
-
+            """ Returns the current application configuration.
             Output:
                 JSON with config data or error
 
@@ -133,12 +110,7 @@ class Routes:
 
         @self.app.route('/api/events', methods=['GET'])
         def get_events_ids():
-            """
-            Returns a list of event IDs.
-
-            Input:
-                None
-
+            """ Returns a list of event IDs.
             Output:
                 JSON list of event IDs or error
 
@@ -167,17 +139,18 @@ class Routes:
 
         @self.app.route('/api/get-event/<event_id>', methods=['GET'])
         def get_event(event_id):
-            """
-            Returns all data for a specific event.
+            """Return all data for a specific event.
 
-            Input:
-                event_id: str - Event ID to fetch
+            Parameters:
+                event_id (str): The ID of the event to fetch.
 
-            Output:
-                JSON with event data or error
-
-            Explanation:
-                Uses the handler to load plots, tracks, and correlations for the given event ID.
+            Returns:
+                flask.Response: JSON response containing:
+                    - 1: List of plot records.
+                    - 2: List of white track records.
+                    - 3: List of white track correlation records.
+                or
+                tuple(flask.Response, int): On error, a JSON payload with an "error" field and the HTTP status code.
             """
             try:
                 data = self.handler.get_event_data(event_id)
@@ -187,22 +160,21 @@ class Routes:
 
         @self.app.route('/creat-track', methods=['POST'])
         def create_track():
-            """
-            Creates a spline track from selected plots.
+            """Create a smoothing spline track from selected plots.
 
-            Input (JSON):
-                data: list - Selected plots
-                smoothingFactor: float or int
+            Parameters:
+                data (list[dict]): Selected plot records from the request JSON payload.
+                smoothingFactor (float | int): Smoothing factor for the spline calculation.
 
-            Output:
-                JSON with list of spline points
-
-            Explanation:
-                Uses smoothing to calculate a curve for the selected points.
+            Returns:
+                flask.Response: JSON response containing:
+                    {
+                        "splinePoints": list  # Evaluated points along the generated spline
+                    }
             """
             try:
                 selected_plots = request.json.get('data', [])
-                smoothing_factor = request.json.get('smoothingFactor')
+                smoothing_factor = request.json.get('smoothingFactor',0.8)
 
                 if not selected_plots:
                     raise ValueError("No plots received")
@@ -250,19 +222,20 @@ class Routes:
 
         @self.app.route('/get-recommendation', methods=['POST'])
         def get_recommendation_server():
-            """
-            Returns recommended tracks based on selected plots.
+            """Return recommended tracks based on selected plots.
 
-            Input (JSON):
-                plots: list - Selected plots
-                eventId: str
-                recommendationType: str - Strategy to use
+            Parameters:
+                plots (list[dict]): Selected plot records from the request JSON payload.
+                eventId (str): ID of the event for which to generate recommendations.
+                recommendationType (str): Name of the strategy to use for recommendation.
 
-            Output:
-                JSON with recommended tracks
-
-            Explanation:
-                Uses a strategy-based function to generate recommended tracks based on input plots.
+            Returns:
+                flask.Response: JSON response with the following structure on success:
+                    {
+                        "recommendedTracks": list  # List of recommended plots records
+                    }
+                or
+                tuple(flask.Response, int): On error, a JSON payload with an "error" field and appropriate HTTP status code.
             """
             try:
                 selected_plots = request.json.get('plots', [])

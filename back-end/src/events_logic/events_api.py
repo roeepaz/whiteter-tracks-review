@@ -13,39 +13,32 @@ EVENTS_FOLDER = get_config_value('events_folder')
 class EventApi(AbstractEventsAPI):
 
     def get_events_ids_list(self):
-        """
-        Returns a list of event IDs (folder names) inside EVENTS_FOLDER.
+        """Returns a list of event IDs (folder names) inside EVENTS_FOLDER.
 
-        Input:
-            None
+        Returns:
+            list[str]: List of folder names representing event IDs.
 
-        Output:
-            list[str] – List of folder names representing event IDs.
-            On error: JSON error with HTTP 404.
-
-        Explanation:
-            Checks if the events folder exists. If yes, returns all folder names (event IDs) inside it.
+        Raises:
+            HTTPException: Returned as JSON error with HTTP 404 if path not found.
         """
         if not os.path.exists(EVENTS_FOLDER):
             return jsonify({"error": f"path to the events not found"}), 404
         return [folder for folder in os.listdir(EVENTS_FOLDER) if os.path.isdir(os.path.join(EVENTS_FOLDER, folder))]
 
     def get_event_data(self, event_id):
-        """
-        Loads event data for the given event_id.
+        """Loads event data for the given event_id.
 
-        Input:
-            event_id: str – ID of the event to load
+        Parameters:
+            event_id (str): ID of the event to load.
 
-        Output:
-            dict:
-                1: List of plot records
-                2: List of white track records
-                3: List of white track correlation records
-            On error: JSON error with HTTP 404
+        Returns:
+            dict: A mapping with keys:
+                1: List of plot records.
+                2: List of white track records.
+                3: List of white track correlation records.
 
-        Explanation:
-            Loads the event and returns all its key data in record format (plot data, tracks, correlations).
+        Raises:
+            FileNotFoundError: Returned as JSON error with HTTP 404 if event not found.
         """
         try:
             event = load_event(event_id)
@@ -60,28 +53,28 @@ class EventApi(AbstractEventsAPI):
     def close_event(self, event_id: str, tracks: dict, notes: str):
         """
         Handles closing an event by saving event plots, tracks, track correlations, and notes.
-        - Saves tracks to `white_tracks.csv`
-        - Saves track-plot correlations to `white_tracks_correlations.csv`
-        - Stores event-wide notes in `notes.json`, including per-track notes
 
         Folder Structure:
         events/
             <event_id>/
                 plots.csv
-                white_tracks.csv
-                white_tracks_correlations.csv
-                notes.json
-        Input:
-            event_id: str – ID of the event to close
-            tracks: dict – All user-defined tracks and their data
-            notes: str – General notes about the event
+                white_tracks.csv (new)
+                white_tracks_correlations.csv (new)
+                notes.json (new)
+        Parameters:
+            event_id (str): ID of the event to close.
+            tracks (dict): All user-defined tracks and their data.
+            notes (str): General notes about the event.
 
-        Output:
+        Returns:
             None
 
-        Explanation:
-            Saves tracks to 'white_tracks.csv', correlations to 'white_tracks_correlations.csv', and notes to 'notes.json'.
-            Tracks are assigned new IDs. Each track's selected plots and notes are also saved.
+        Notes:
+            This method saves:
+            - Tracks to 'white_tracks.csv'
+            - Plot-track correlations to 'white_tracks_correlations.csv'
+            - Event-wide notes to 'notes.json'.
+            Tracks are assigned new IDs and saved along with spline points and notes.
         """
         EVENTS_DIR = os.path.join(get_config_value("events_folder"), event_id)
         TRACKS_FILE = os.path.join(EVENTS_DIR, f"{get_config_value('events_tracks_file_name')}.csv")
@@ -123,17 +116,13 @@ class EventApi(AbstractEventsAPI):
 
 
 def get_new_track_id(event: Event) -> int:
-    """
-    Determines the next available track ID.
+    """Determines the next available track ID.
 
-    Input:
-        event: Event – The event object
+    Parameters:
+        event (Event): The event object.
 
-    Output:
-        int – The next available track ID
-
-    Explanation:
-        Finds the max existing track ID and returns the next value. Defaults to 1 if none exist.
+    Returns:
+        int: The next available track ID, defaults to 1 if none exist.
     """
     df = event.white_tracks_df.copy()
     if not df.empty and "id" in df.columns:
@@ -142,20 +131,16 @@ def get_new_track_id(event: Event) -> int:
 
 
 def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: list, full_plots_df: pd.DataFrame, connection_file: str):
-    """
-    Updates the correlations table between plots and a track.
+    """Updates the correlations table between plots and a track.
 
-    Input:
-        track_id: int – The track ID being saved
-        selected_plot_ids: list – List of plot IDs in the track
-        full_plots_df: DataFrame – All plot data from the event
-        connection_file: str – Path to the correlations CSV file
+    Parameters:
+        track_id (int): The track ID being saved.
+        selected_plot_ids (list[str]): List of plot IDs in the track.
+        full_plots_df (pd.DataFrame): All plot data from the event.
+        connection_file (str): Path to the correlations CSV file.
 
-    Output:
+    Returns:
         None
-
-    Explanation:
-        Creates a new DataFrame mapping plot IDs to the track and appends it to the CSV.
     """
     system_id_map = full_plots_df.copy()
     system_id_map["plot_id"] = system_id_map["plot_id"].astype(str)
@@ -174,18 +159,14 @@ def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: lis
 
 
 def append_to_csv(file_path: str, df: pd.DataFrame):
-    """
-    Appends a DataFrame to a CSV file.
+    """Appends a DataFrame to a CSV file.
 
-    Input:
-        file_path: str – Path to the CSV file
-        df: DataFrame – Data to append
+    Parameters:
+        file_path (str): Path to the CSV file.
+        df (pd.DataFrame): Data to append.
 
-    Output:
+    Returns:
         None
-
-    Explanation:
-        Appends the data to the file, adding a header if the file is new or empty.
     """
     if df.empty:
         return
@@ -194,16 +175,15 @@ def append_to_csv(file_path: str, df: pd.DataFrame):
 
 
 def append_to_json_file(category: str, key: str, data, file_path: str):
-    """
-    Appends a key-value pair under a category in a JSON file.
+    """Appends a key-value pair under a category in a JSON file.
 
-    Input:
-        category: str – JSON key grouping (e.g., 'white tracks notes')
-        key: str – Sub-key inside the category
-        data: any – Value to store
-        file_path: str – Path to the JSON file
+    Parameters:
+        category (str): JSON key grouping (e.g., 'white tracks notes').
+        key (str): Sub-key inside the category.
+        data (any): Value to store.
+        file_path (str): Path to the JSON file.
 
-    Output:
+    Returns:
         None
 
     Explanation:
