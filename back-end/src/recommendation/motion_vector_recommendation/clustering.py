@@ -2,8 +2,7 @@ from typing import List, Dict, Optional, Tuple
 from collections import deque, defaultdict
 import numpy as np
 import pandas as pd
-
-from api_utils import minkowski_distance_plus_time
+from utils.distance_metrics import minkowski_distance_plus_time
 from recommendation.build_tree_cache import build_kdtree_with_cache
 
 

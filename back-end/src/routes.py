@@ -1,39 +1,10 @@
 from typing import Tuple, Union
 from flask import Flask, request, jsonify, render_template
 import flask
-from api_utils import handle_selected_plots
+from utils.spline_processing import handle_selected_plots
 from recommendation.recomendations_manager import get_recommendation_base_on_strategy
 from config_loader import load_config
-
-def handle_error(e, status_code=500, error_type=None) -> Tuple:
-    """Handle an exception and return a standardized JSON error response.
-
-    Parameters:
-        e (Exception): The exception that was raised.
-        status_code (int): HTTP status code to return. Defaults to 500.
-        error_type (str, optional): Custom error type identifier.
-
-    Returns:
-        tuple[flask.Response, int]: A JSON response with structure 
-            {
-                "success": False,
-                "error": {
-                    "type": error_type or type(e).__name__,
-                    "message": str(e)
-                }
-            }
-        and the HTTP status code.
-    """
-    print(f"[ERROR] {type(e).__name__}: {e}")
-    error_payload = {
-        "success": False,
-        "error": {
-            "type": error_type or type(e).__name__,
-            "message": str(e)
-        }
-    }
-    return jsonify(error_payload), status_code
-
+from utils.error_handling import handle_error
 
 class Routes:
     def __init__(self, app: Flask, event_methods_instance):

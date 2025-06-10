@@ -4,8 +4,8 @@ import hashlib
 from typing import List, Dict
 from threading import Lock
 from collections import OrderedDict
-from api_utils import estimate_velocity_from_density, estimate_local_eps_with_density
-
+from utils.parameter_estimation_utils import estimate_adaptive_clustering_radius
+from utils.distance_metrics import estimate_velocity_from_density
 # Cache settings
 MAX_CACHE_SIZE = 128
 
@@ -109,7 +109,7 @@ def compute_local_eps(
 
     local_eps: List[float] = []
     for i, plot in enumerate(plots):
-        eps = estimate_local_eps_with_density(plots, plot, v_avg=v_avg_list[i])
+        eps = estimate_adaptive_clustering_radius(plots, plot, v_avg=v_avg_list[i])
         local_eps.append(eps)
 
     with eps_lock:

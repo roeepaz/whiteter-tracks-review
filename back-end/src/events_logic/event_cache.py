@@ -4,7 +4,7 @@ import pandas as pd
 from cachetools import LRUCache
 from threading import Lock
 from pathlib import Path
-from ..api_utils import safe_csv_read
+from utils.data_utils import safe_csv_read
 
 EVENTS_FOLDER = get_config_value("events_folder")
 _event_cache: LRUCache = LRUCache(maxsize=10)  # Cache up to 10 events

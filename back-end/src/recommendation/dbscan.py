@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from typing import List
 from recommendation.base import RecommendationStrategy
-from api_utils import minkowski_distance_plus_time
+from utils.distance_metrics import minkowski_distance_plus_time
 from recommendation.utils import compute_local_eps, compute_local_v_avg
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event

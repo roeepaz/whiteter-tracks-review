@@ -5,7 +5,7 @@ from recommendation.motion_vector_recommendation.clustering import split_initial
 from recommendation.motion_vector_recommendation.vector_utils import create_motion_vector, calc_future_center_of_mass, calc_distance_between_two_center_mass, calc_representative_center_of_mass
 from recommendation.motion_vector_recommendation.validation import is_valid_cluster
 from recommendation.utils import compute_local_eps, compute_local_v_avg
-from api_utils import minkowski_distance_plus_time
+from utils.distance_metrics import minkowski_distance_plus_time
 from events_logic.event_cache import load_event
 from custom_types import EventWithWhiteTracks
 import pandas as pd
