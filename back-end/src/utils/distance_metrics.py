@@ -108,23 +108,26 @@ def calculate_average_velocity(neighbor_plots: List[Dict[str, float]]) -> float:
     # 2. Sort by timestamp to ensure forward progression
     sorted_plots = sorted(neighbor_plots, key=lambda p: p['t'])
 
-    # 3. Accumulate distance and time
-    total_dist = 0.0
-    total_time = 0.0
-    for p1, p2 in zip(sorted_plots, sorted_plots[1:]):
-        # 3a. Spatial distance (Euclidean in 3D)
-        d = np.linalg.norm([p2['x']-p1['x'], p2['y']-p1['y'], p2['z']-p1['z']])
-        # 3b. Time interval (always positive after sorting)
-        dt = p2['t'] - p1['t']
-        if dt > 0:
-            total_dist += d
-            total_time += dt
+    # 3. Convert to numpy array: shape (N, 4)
+    coords = np.array([[p['x'], p['y'], p['z'], p['t']] for p in sorted_plots])
 
-    # 4. Handle zero total time
+    # 4. Compute deltas between consecutive rows
+    deltas = np.diff(coords, axis=0)  # shape: (N-1, 4)
+
+    # Euclidean distances (x, y, z)
+    spatial_dists = np.linalg.norm(deltas[:, :3], axis=1)
+
+    # Time deltas
+    time_deltas = deltas[:, 3]
+
+    # 5. Mask valid time intervals (dt > 0)
+    valid_mask = time_deltas > 0
+    total_dist = np.sum(spatial_dists[valid_mask])
+    total_time = np.sum(time_deltas[valid_mask])
+
     if total_time == 0:
         return MINIMAL_VELOCITY
 
-    # 5. Final average speed
     return total_dist / total_time
 
 def estimate_velocity_from_density(neighbor_plots, max_velocity=MAX_POSSIBLE_VELOCITY, alpha=VELOCITY_ALPHA) -> float:
