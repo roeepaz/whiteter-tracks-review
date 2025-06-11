@@ -8,6 +8,7 @@ from config_loader import get_config_value
 from events_logic.interface.AbstractEventsAPI import AbstractEventsAPI
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event, clear_event
+from enums.event_data_keys import EventDataKey
 
 EVENTS_FOLDER = Path(get_config_value('events_folder'))
 
@@ -44,9 +45,9 @@ class EventApi(AbstractEventsAPI):
         try:
             event = load_event(event_id)
             return {
-                1: event.plots_df.to_dict(orient='records'),
-                2: event.white_tracks_df.to_dict(orient='records'),
-                3: event.white_track_correlations_df.to_dict(orient='records'),
+                EventDataKey.PLOTS: event.plots_df.to_dict(orient='records'),
+                EventDataKey.WHITE_TRACKS: event.white_tracks_df.to_dict(orient='records'),
+                EventDataKey.CORRELATIONS: event.white_track_correlations_df.to_dict(orient='records'),
             }
         except FileNotFoundError as e:
             return jsonify({"error": str(e)}), 404

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchEventPlots, fetchConfig } from "../API/apiServer";
 import { Plot, DictData, TrackPlot, TrackAndPlotsConnection, UsePlotsResult } from "../type/types";
 import { getColor } from "../utils/colors";
-
+import { EventDataKey } from "../constants/eventDataKeys";
 interface ProcessedData {
   unassociatedPlots: Plot[];
   associatedPlots: Plot[];
@@ -83,23 +83,25 @@ export const usePlots = (
   
 
   useEffect(() => {
-    if (data && data[1] && Array.isArray(data[1])) {
-      const rawPlots = data[1] as Plot[];
-      const rawConnection = data[3];
-      setConnections(rawConnection);
+  if (data && data[EventDataKey.PLOTS] && Array.isArray(data[EventDataKey.PLOTS])) {
+    const rawPlots = data[EventDataKey.PLOTS] as Plot[];
+    const rawConnection = data[EventDataKey.CORRELATIONS];
+    setConnections(rawConnection);
 
-      const { unassociatedPlots, associatedPlots, plotsWithoutTrack_id } = processPlotData(rawPlots, rawConnection);
-      setPlotsWithoutTrack_id(plotsWithoutTrack_id);
-      setPlots(unassociatedPlots);
-      setPlotsAssociateToTrack(associatedPlots);
-      setExistTracksPlots(data[2]);
-      setMaxTime(Math.max(...rawPlots.map((plot) => plot.t)));
-      setSensors([...new Set(data[1].map((plot) => plot.system_id))]);
+    const { unassociatedPlots, associatedPlots, plotsWithoutTrack_id } = processPlotData(rawPlots, rawConnection);
+    setPlotsWithoutTrack_id(plotsWithoutTrack_id);
+    setPlots(unassociatedPlots);
+    setPlotsAssociateToTrack(associatedPlots);
 
-      setTracksIDs([...new Set(data[2].map((plot) => plot.id))]);
-      setFilteredPlots(unassociatedPlots)
-    }
-  }, [data]);
+    const tracks = data[EventDataKey.WHITE_TRACKS];
+    setExistTracksPlots(tracks);
+    setMaxTime(Math.max(...rawPlots.map((plot) => plot.t)));
+    setSensors([...new Set(rawPlots.map((plot) => plot.system_id))]);
+
+    setTracksIDs([...new Set(tracks.map((plot) => plot.id))]);
+    setFilteredPlots(unassociatedPlots);
+  }
+}, [data]);
 
   const filterPlotsByTime = (time: number) => {
     setFilteredPlotsByTime(filteredPlots.filter((plot) => plot.t <= time));
