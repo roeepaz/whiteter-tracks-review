@@ -1,34 +1,23 @@
-import numpy as np
-"""convert methods"""
+from pyproj import Transformer
 
-def convert_ecef_to_lla(x_ecef, y_ecef, z_ecef) -> tuple:
-    """Convert Earth-Centered Earth-Fixed (ECEF) coordinates to geodetic latitude, longitude, and altitude.
+# Reuse the transformer for performance
+_ecef_to_lla_transformer = Transformer.from_crs(
+    crs_from="epsg:4978",  # ECEF
+    crs_to="epsg:4326",    # WGS84: lat/lon/alt
+    always_xy=True
+)
 
-    Parameters:
-        x (float): ECEF X coordinate in meters.
-        y (float): ECEF Y coordinate in meters.
-        z (float): ECEF Z coordinate in meters.
-
-    Returns:
-        tuple[float, float, float]:  
-            latitude (float): Geodetic latitude in decimal degrees.  
-            longitude (float): Geodetic longitude in decimal degrees.  
-            altitude (float): Height above the WGS84 ellipsoid in meters.
+def convert_ecef_to_lla(x_ecef: float, y_ecef: float, z_ecef: float) -> tuple:
     """
-    a = 6378137  # Equatorial radius
-    f = 1 / 298.257223563  # Flattening
-    e2 = 2 * f - f ** 2  # Eccentricity squared
-    b = a * (1 - f)
-    ep = np.sqrt((a ** 2 - b ** 2) / (b ** 2))
-
-    p = np.sqrt(x_ecef ** 2 + y_ecef ** 2)
-    theta = np.arctan2(z_ecef * a, p * b)
-
-    lon = np.arctan2(y_ecef, x_ecef)
-    lat = np.arctan2(z_ecef + ep ** 2 * b * np.sin(theta) ** 3, p - e2 * a * np.cos(theta) ** 3)
-    N = a / np.sqrt(1 - e2 * np.sin(lat) ** 2)
-    alt = p / np.cos(lat) - N
-
-    lat = np.degrees(lat)
-    lon = np.degrees(lon)
+    Convert ECEF (Earth-Centered Earth-Fixed) coordinates to geodetic coordinates (lat, lon, alt).
+    
+    Parameters:
+        x_ecef (float): X coordinate in meters
+        y_ecef (float): Y coordinate in meters
+        z_ecef (float): Z coordinate in meters
+    
+    Returns:
+        tuple[float, float, float]: (latitude, longitude, altitude) in degrees and meters
+    """
+    lon, lat, alt = _ecef_to_lla_transformer.transform(x_ecef, y_ecef, z_ecef)
     return lat, lon, alt
