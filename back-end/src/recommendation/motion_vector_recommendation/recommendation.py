@@ -1,7 +1,7 @@
 from typing import List
 import pandas as pd
 import numpy as np
-from recommendation.base import RecommendationStrategy
+from recommendation.AbstractRecommendationStrategy import AbstractRecommendationStrategy
 from recommendation.motion_vector_recommendation.clustering import split_initial_clusters, expand_cluster, custom_adaptive_dbscan
 from recommendation.motion_vector_recommendation.vector_utils import create_motion_vector, calc_future_center_of_mass, calc_distance_between_two_center_mass, calc_representative_center_of_mass
 from recommendation.motion_vector_recommendation.validation import is_valid_cluster
@@ -21,7 +21,7 @@ from config.constants import (
     DEFLECTION_MAX
 )
 
-class MotionVectorRecommendation(RecommendationStrategy): 
+class MotionVectorRecommendation(AbstractRecommendationStrategy): 
     def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
         """Generate motion vector–based track recommendations.
 

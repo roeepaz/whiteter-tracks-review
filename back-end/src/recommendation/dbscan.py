@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from typing import List
-from recommendation.base import RecommendationStrategy
+from recommendation.AbstractRecommendationStrategy import AbstractRecommendationStrategy
 from utils.distance_metrics import minkowski_distance_plus_time
 from recommendation.utils import compute_local_eps, compute_local_v_avg
 from custom_types import EventWithWhiteTracks
@@ -12,7 +12,7 @@ from recommendation.build_tree_cache import (
     filter_relevant_plots,
 )
 
-class DBSCANRecommendation(RecommendationStrategy):
+class DBSCANRecommendation(AbstractRecommendationStrategy):
     def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
         """Perform DBSCAN-like clustering on relevant plots.
 

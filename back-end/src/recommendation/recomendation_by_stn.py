@@ -2,10 +2,11 @@ from typing import List
 import pandas as pd
 import os
 from config_loader import get_config_value
-from recommendation.base import RecommendationStrategy
+from recommendation.AbstractRecommendationStrategy import AbstractRecommendationStrategy
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event
-class STNRecommendation(RecommendationStrategy):
+
+class STNRecommendation(AbstractRecommendationStrategy):
     def recommend(self, event_id, selected_plots) -> List[dict]:
         
         event : EventWithWhiteTracks = load_event(event_id)

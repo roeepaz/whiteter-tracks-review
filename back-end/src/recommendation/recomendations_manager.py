@@ -2,9 +2,9 @@ from recommendation.recomendation_by_stn import STNRecommendation
 from recommendation.recomendation_by_track_id import TrackIDRecommendation
 from recommendation.dbscan import DBSCANRecommendation
 from recommendation.motion_vector_recommendation.recommendation import MotionVectorRecommendation
-from recommendation.base import RecommendationStrategy
+from recommendation.AbstractRecommendationStrategy import AbstractRecommendationStrategy
 
-RECOMMENDATION_MAP: dict[str, type[RecommendationStrategy]] = {
+RECOMMENDATION_MAP: dict[str, type[AbstractRecommendationStrategy]] = {
     "stn": STNRecommendation,
     "trackid": TrackIDRecommendation,
     "dbscan": DBSCANRecommendation,

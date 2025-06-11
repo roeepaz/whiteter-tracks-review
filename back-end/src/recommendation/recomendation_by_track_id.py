@@ -1,9 +1,9 @@
 from typing import List
 import pandas as pd
-from recommendation.base import RecommendationStrategy
+from recommendation.AbstractRecommendationStrategy import AbstractRecommendationStrategy
 from events_logic.event_cache import load_event
 
-class TrackIDRecommendation(RecommendationStrategy):
+class TrackIDRecommendation(AbstractRecommendationStrategy):
     def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
         """Return all plots whose track_id matches any of the user’s selected plots.
 
