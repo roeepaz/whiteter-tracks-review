@@ -27,7 +27,7 @@ def df_hash(df: pd.DataFrame) -> str:
         pd.util.hash_pandas_object(df, index=True).values
     ).hexdigest()
 
-def build_kdtree_with_cache(df: pd.DataFrame, time_weight: float = DEFAULT_TIME_WEIGHT) -> Tuple[KDTree, List[Tuple[int, int]]]:
+def build_kdtree_with_cache(df_plots: pd.DataFrame, time_weight: float = DEFAULT_TIME_WEIGHT) -> Tuple[KDTree, List[Tuple[int, int]]]:
     """Build or retrieve a cached 4D KDTree with time-weighted coordinates.
 
     Parameters:
@@ -43,17 +43,17 @@ def build_kdtree_with_cache(df: pd.DataFrame, time_weight: float = DEFAULT_TIME_
         - Computes a stable hash of the DataFrame to use as a cache key.
         - Uses a thread-safe lock to guard concurrent cache access.
     """
-    key = df_hash(df)
+    key = df_hash(df_plots)
 
     with _kdtree_lock:
         if key in _kdtree_cache:
             return _kdtree_cache[key]
 
-    coords = df[['x', 'y', 'z', 't']].copy()
+    coords = df_plots[['x', 'y', 'z', 't']].copy()
     coords['t'] *= time_weight
     kd_coords = coords.to_numpy()
     tree = KDTree(kd_coords)
-    all_keys = list(zip(df['plot_id'], df['system_id']))
+    all_keys = list(zip(df_plots['plot_id'], df_plots['system_id']))
 
     with _kdtree_lock:
         if key not in _kdtree_cache:
@@ -63,7 +63,7 @@ def build_kdtree_with_cache(df: pd.DataFrame, time_weight: float = DEFAULT_TIME_
 
 
 def filter_relevant_plots(
-    df: pd.DataFrame,
+    df_plots: pd.DataFrame,
     tree: KDTree,
     all_keys: List[Tuple[int, int]],
     selected_plots: List[Dict],
@@ -100,8 +100,8 @@ def filter_relevant_plots(
         result_indices = tree.query_ball_point(point, r=filter_radius)
         matching_keys.update(all_keys[i] for i in result_indices)
 
-    df = df.copy()
-    df['key'] = list(zip(df['plot_id'], df['system_id']))
-    filtered_df = df[df['key'].isin(matching_keys)].drop(columns=['key'])
+    df_plots = df_plots.copy()
+    df_plots['key'] = list(zip(df_plots['plot_id'], df_plots['system_id']))
+    filtered_df = df_plots[df_plots['key'].isin(matching_keys)].drop(columns=['key'])
 
     return filtered_df

@@ -40,34 +40,34 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         tree, all_keys = build_kdtree_with_cache(df_plots)
 
         # Step 2: Filter relevant plots near the selected ones
-        df = filter_relevant_plots(df_plots, tree, all_keys, selected_plots).reset_index(drop=True)
-        df['cluster'] = -1  # default value: not assigned
+        df_filtered_plots = filter_relevant_plots(df_plots, tree, all_keys, selected_plots).reset_index(drop=True)
+        df_filtered_plots['cluster'] = -1  # default value: not assigned
 
         # Debug: detect any columns with ndarray issues
-        for col in df.columns:
-            if isinstance(df[col].iloc[0], np.ndarray):
+        for col in df_filtered_plots.columns:
+            if isinstance(df_filtered_plots[col].iloc[0], np.ndarray):
                 print(f"Column {col} contains ndarray!")
 
         # Step 3: Precompute v_avg and eps per plot
-        coords = df[['x', 'y', 'z']].values
-        plots = df.to_dict(orient='records')
-        df['v_avg'] = compute_local_v_avg(plots, coords)
-        df['eps'] = compute_local_eps(plots, df['v_avg'].values)
+        coords = df_filtered_plots[['x', 'y', 'z']].values
+        plots = df_filtered_plots.to_dict(orient='records')
+        df_filtered_plots['v_avg'] = compute_local_v_avg(plots, coords)
+        df_filtered_plots['eps'] = compute_local_eps(plots, df_filtered_plots['v_avg'].values)
 
         # Step 4: Cluster expansion
         cluster_id = 0
 
         for root_plot in selected_plots:
-            root_idx = self._find_plot_index(df, root_plot)
-            if df.at[root_idx, 'cluster'] != -1:
+            root_idx = self._find_plot_index(df_filtered_plots, root_plot)
+            if df_filtered_plots.at[root_idx, 'cluster'] != -1:
                 continue  # already clustered
 
-            print(f'--> Root {cluster_id}: eps={df.at[root_idx, "eps"]:.2f}, v_avg={df.at[root_idx, "v_avg"]:.2f}')
-            df.at[root_idx, 'cluster'] = cluster_id
-            self._expand_cluster(df, root_idx, cluster_id, DEFAULT_LAMBDA_T)
+            print(f'--> Root {cluster_id}: eps={df_filtered_plots.at[root_idx, "eps"]:.2f}, v_avg={df_filtered_plots.at[root_idx, "v_avg"]:.2f}')
+            df_filtered_plots.at[root_idx, 'cluster'] = cluster_id
+            self._expand_cluster(df_filtered_plots, root_idx, cluster_id, DEFAULT_LAMBDA_T)
             cluster_id += 1
 
-        return df[df['cluster'] != -1].to_dict(orient='records')
+        return df_filtered_plots[df_filtered_plots['cluster'] != -1].to_dict(orient='records')
 
     def _find_plot_index(self, df: pd.DataFrame, plot: dict) -> int:
         """Find the row index of a given plot in the DataFrame.
@@ -92,7 +92,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
 
     def _expand_cluster(
         self,
-        df: pd.DataFrame,
+        df_filtered_plots: pd.DataFrame,
         root_idx: int,
         cluster_id: int,
         lambda_t: float = DEFAULT_LAMBDA_T
@@ -115,18 +115,18 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         """
         queue = [root_idx]
         visited = set(queue)
-        df.at[root_idx, 'cluster'] = cluster_id
+        df_filtered_plots.at[root_idx, 'cluster'] = cluster_id
 
         while queue:
             current_idx = queue.pop(0)
-            current_plot = df.iloc[current_idx].to_dict()
+            current_plot = df_filtered_plots.iloc[current_idx].to_dict()
 
-            avg_v = df.at[current_idx, 'v_avg']
-            eps = df.at[current_idx, 'eps']
+            avg_v = df_filtered_plots.at[current_idx, 'v_avg']
+            eps = df_filtered_plots.at[current_idx, 'eps']
 
             # Pre-filter: only consider unvisited, unclustered points
-            df_candidates = df[
-                (df['cluster'] == -1) & (~df.index.isin(visited))
+            df_candidates = df_filtered_plots[
+                (df_filtered_plots['cluster'] == -1) & (~df_filtered_plots.index.isin(visited))
             ]
 
             for neighbor_idx, neighbor_row in df_candidates.iterrows():
@@ -138,6 +138,6 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
                 )
 
                 if distance < eps:
-                    df.at[neighbor_idx, 'cluster'] = cluster_id
+                    df_filtered_plots.at[neighbor_idx, 'cluster'] = cluster_id
                     visited.add(neighbor_idx)
                     queue.append(neighbor_idx)

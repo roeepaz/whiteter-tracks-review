@@ -1,4 +1,5 @@
 
+from typing import Dict, List
 import numpy as np
 import pandas as pd
 from utils.distance_metrics import compute_distances_to_center
@@ -46,7 +47,7 @@ def estimate_clustering_radius(coords, idx, k=K_NEIGHBORS, factor=RADIUS_SCALING
     return avg * factor
 
 def estimate_adaptive_clustering_radius(
-    df: pd.DataFrame,
+    plots: List[Dict],
     center_plot: dict,
     radius: float = ADAPTIVE_RADIUS,
     max_eps: float = MAX_CLUSTERING_EPSILON,
@@ -70,12 +71,13 @@ def estimate_adaptive_clustering_radius(
         float: adaptive eps value
     """
     """Estimate eps based on count of neighbors within a given radius (vectorized)."""
-    distances = compute_distances_to_center(df, center_plot, v_avg, lambda_t)
+    df_plots = pd.DataFrame(plots)
+    distances = compute_distances_to_center(df_plots, center_plot, v_avg, lambda_t)
 
     # Exclude center itself
     mask = ~(
-        (df['plot_id'] == center_plot['plot_id']) &
-        (df['system_id'] == center_plot['system_id'])
+        (df_plots['plot_id'] == center_plot['plot_id']) &
+        (df_plots['system_id'] == center_plot['system_id'])
     )
     count = np.count_nonzero(distances[mask] <= radius)
 

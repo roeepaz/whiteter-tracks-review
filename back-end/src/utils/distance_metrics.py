@@ -33,7 +33,7 @@ def minkowski_distance_plus_time(point1, point2,  lambda_t=DEFAULT_LAMBDA_T, v_a
     return distance
 
 def compute_distances_to_center(
-    df: pd.DataFrame,
+    df_plots: pd.DataFrame,
     center_plot: dict,
     v_avg: float = DEFAULT_AVG_VELOCITY,
     lambda_t: float = DEFAULT_LAMBDA_T
@@ -46,7 +46,7 @@ def compute_distances_to_center(
         **Assumption:** `df` contains columns ['plot_id', 'system_id', 'x', 'y', 'z', 't'].
 
         Parameters:
-            df (pd.DataFrame):
+            df_plots (pd.DataFrame):
                 DataFrame of all plots, indexed arbitrarily but containing the required columns.
             center_plot (Dict[str, Any]):
                 A dict with keys 'plot_id' and 'system_id' identifying the center row in `df`.
@@ -61,15 +61,15 @@ def compute_distances_to_center(
                 sqrt(‖Δxyz‖² + (Δt · v_avg · λ)²) relative to the center plot.
     """
     mask = (
-        (df['plot_id'] == center_plot['plot_id']) &
-        (df['system_id'] == center_plot['system_id'])
+        (df_plots['plot_id'] == center_plot['plot_id']) &
+        (df_plots['system_id'] == center_plot['system_id'])
     )
     if not mask.any():
         raise ValueError("Center plot not found")
-    idx = df.index[mask][0]
+    idx = df_plots.index[mask][0]
 
-    coords = df[['x', 'y', 'z']].to_numpy()     # shape (N,3)
-    times  = df['t'].to_numpy()                 # shape (N,)
+    coords = df_plots[['x', 'y', 'z']].to_numpy()     # shape (N,3)
+    times  = df_plots['t'].to_numpy()                 # shape (N,)
 
     diff_spatial = coords - coords[idx]         # shape (N,3)
     spatial_dist = np.linalg.norm(diff_spatial, axis=1)  # Euclidean spatial
