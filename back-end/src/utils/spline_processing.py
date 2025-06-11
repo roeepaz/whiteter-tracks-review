@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Dict, Sequence
 import pandas as pd
 import numpy as np
 from utils.coordinate_transforms import convert_ecef_to_lla
 from csaps import csaps
 from config_loader import get_config_value  
 
-def fit_smoothing_spline_to_plots(selected_plots, smoothing_factor) -> List:
+def generate_smoothed_track_from_plots(selected_plots: List[Dict], smoothing_factor: float) -> List[Dict]:
     """Generate a smoothing spline from the user-selected plots.
 
     Parameters:
@@ -31,12 +31,14 @@ def fit_smoothing_spline_to_plots(selected_plots, smoothing_factor) -> List:
     u = selected_plots_df['t'].tolist()
     # Generate spline
     points = np.array([x_list, y_list, z_list])
-    spline_points = generate_smoothing_spline(points, u, smoothing_factor)
+    spline_xyz = generate_ecef_spline_with_time(points, u, smoothing_factor)
+    return convert_ecef_track_to_lla(spline_xyz)
 
-    return spline_points
 
-
-def generate_smoothing_spline(points, u, smoothing_factor) -> List:
+def generate_ecef_spline_with_time(points: Sequence[Sequence[float]],
+    u: Sequence[float],
+    smoothing_factor: float
+) -> np.ndarray:    
     """Compute a smoothing spline line for given control points.
 
     Parameters:
@@ -49,27 +51,30 @@ def generate_smoothing_spline(points, u, smoothing_factor) -> List:
         numpy.ndarray: Array of evaluated spline points with shape (len(u), dims).
     """
 
-     # Ensure `u` is sorted and remove duplicates
     u, unique_indices = np.unique(u, return_index=True)
-    
-    # Apply sorting and remove duplicates to points
-    points = np.array(points)[:, unique_indices]  # Select unique indices for x, y, z
+    points = np.array(points)[:, unique_indices]
+
     spline = csaps(u, points, smooth=smoothing_factor)
 
-    min_t = u[0]
-    max_t = u[-1]
+    min_t, max_t = u[0], u[-1]
     sampling_rate = get_config_value('sampling_rate_per_second_for_spline')
     num_points = int((max_t - min_t) * sampling_rate)
-    u_fine = np.linspace(min_t, max_t,num_points)
+    u_fine = np.linspace(min_t, max_t, num_points)
+
     x_spline, y_spline, z_spline = spline(u_fine)
-    # Convert sampled ECEF points to LLA for frontend visualization
-    spline_points = []
-    for i in range(num_points):
-        latitude, longitude, altitude = convert_ecef_to_lla(x_spline[i], y_spline[i], z_spline[i])
-        spline_points.append({
-            'latitude': latitude,
-            'longitude': longitude,
-            'altitude': altitude,
-            'time' : u_fine[i]
-        })
-    return spline_points
+    return np.stack([x_spline, y_spline, z_spline, u_fine], axis=1)  # shape: (N, 4)
+
+def convert_ecef_track_to_lla(spline_xyz: np.ndarray) -> List[Dict]:
+    """
+    Convert a spline track in ECEF coordinates to LLA.
+    """
+    return [
+        {
+            'latitude': lat,
+            'longitude': lon,
+            'altitude': alt,
+            'time': t
+        }
+        for x, y, z, t in spline_xyz
+        for lat, lon, alt in [convert_ecef_to_lla(x, y, z)]
+    ]

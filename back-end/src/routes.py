@@ -1,7 +1,7 @@
 from typing import Tuple, Union
 from flask import Flask, request, jsonify, render_template
 import flask
-from utils.spline_processing import fit_smoothing_spline_to_plots
+from utils.spline_processing import generate_smoothed_track_from_plots
 from recommendation.recomendations_manager import get_recommendation_base_on_strategy
 from config_loader import load_config
 from utils.error_handling import handle_error
@@ -145,7 +145,7 @@ class Routes:
                 if not selected_plots:
                     raise ValueError("No plots received")
 
-                spline_points = fit_smoothing_spline_to_plots(selected_plots, smoothing_factor)
+                spline_points = generate_smoothed_track_from_plots(selected_plots, smoothing_factor)
                 return jsonify({"success": True, "data": spline_points})
 
             except ValueError as e:
