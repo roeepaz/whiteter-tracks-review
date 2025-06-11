@@ -74,6 +74,5 @@ DBSCAN_MIN_SAMPLES = 5  # Min neighbors required to form a core point
 
 
 # === Motion Vector Segments ===
-
 REPRESENTATIVE_COM_SIZE = 8  # First K points for representative center of mass
 MOTION_VECTOR_SIZE = 7  # Last K points used to compute motion vector
