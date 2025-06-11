@@ -1,7 +1,7 @@
 import os
 import yaml  # PyYAML
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "app_config.yaml")
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config/app_config.yaml")
 
 def load_config() -> dict:
     """Load the YAML config file and return it as a dictionary."""
