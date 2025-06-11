@@ -41,7 +41,7 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         print("\nStarting motion vector recommendation...")
         event_data : EventWithWhiteTracks = load_event(event_id)
 
-        df_plots = event_data.plots_df.copy()
+        df_plots = event_data.df_plots.copy()
         df_plots['plot_id'] = df_plots['plot_id'].astype(int)
         df_plots['system_id'] = df_plots['system_id'].astype(int)
 

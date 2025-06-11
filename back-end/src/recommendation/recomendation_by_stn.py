@@ -10,15 +10,15 @@ class STNRecommendation(AbstractRecommendationStrategy):
     def recommend(self, event_id, selected_plots) -> List[dict]:
         
         event : EventWithWhiteTracks = load_event(event_id)
-        plots_df = event.plots_df.copy()
+        df_plots = event.df_plots.copy()
         
         
         # Extract all unique (system_id, STN) pairs from the selected plots
         selected_pairs = {(plot['system_id'], plot['STN']) for plot in selected_plots}
 
         # Filter the DataFrame to include only rows with matching (system_id, STN) pairs
-        mask = plots_df.apply(lambda row: (row['system_id'], row['STN']) in selected_pairs, axis=1)
+        mask = df_plots.apply(lambda row: (row['system_id'], row['STN']) in selected_pairs, axis=1)
 
-        result = plots_df[mask].to_dict(orient='records')
+        result = df_plots[mask].to_dict(orient='records')
 
         return result

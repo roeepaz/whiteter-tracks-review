@@ -45,7 +45,7 @@ class EventApi(AbstractEventsAPI):
         try:
             event = load_event(event_id)
             return {
-                EventDataKey.PLOTS: event.plots_df.to_dict(orient='records'),
+                EventDataKey.PLOTS: event.df_plots.to_dict(orient='records'),
                 EventDataKey.WHITE_TRACKS: event.white_tracks_df.to_dict(orient='records'),
                 EventDataKey.CORRELATIONS: event.white_track_correlations_df.to_dict(orient='records'),
             }
@@ -88,15 +88,15 @@ class EventApi(AbstractEventsAPI):
         notes_file = events_dir / "notes.json"
 
         event: EventWithWhiteTracks = load_event(event_id)
-        full_plots_df = event.plots_df.copy()
+        full_df_plots = event.df_plots.copy()
         all_tracks = []
         next_track_id = get_new_track_id(event)
 
         for track_data in tracks.values():
-            selected_plots_df = pd.DataFrame(track_data.get("selectedPlots", []))
+            selected_df_plots = pd.DataFrame(track_data.get("selectedPlots", []))
             spline_points_df = pd.DataFrame(track_data.get("splinePoints", []))
 
-            if selected_plots_df.empty:
+            if selected_df_plots.empty:
                 continue
 
             track_id = next_track_id
@@ -105,8 +105,8 @@ class EventApi(AbstractEventsAPI):
             spline_points_df["id"] = track_id
             all_tracks.append(spline_points_df)
 
-            selected_plot_ids = selected_plots_df["plot_id"].astype(str).tolist()
-            update_white_tracks_correlations_table(track_id, selected_plot_ids, full_plots_df, correlations_file)
+            selected_plot_ids = selected_df_plots["plot_id"].astype(str).tolist()
+            update_white_tracks_correlations_table(track_id, selected_plot_ids, full_df_plots, correlations_file)
 
             track_note = track_data.get("trackNote")
             if track_note:
@@ -136,20 +136,20 @@ def get_new_track_id(event: EventWithWhiteTracks) -> int:
     return 1
 
 
-def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: list, full_plots_df: pd.DataFrame, connection_file: Path
+def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: list, full_df_plots: pd.DataFrame, connection_file: Path
 ) -> None:
     """Updates the correlations table between plots and a track.
 
     Parameters:
         track_id (int): The track ID being saved.
         selected_plot_ids (list[str]): List of plot IDs in the track.
-        full_plots_df (pd.DataFrame): All plot data from the event.
+        full_df_plots (pd.DataFrame): All plot data from the event.
         connection_file (Path): Path to the correlations CSV file.
 
     Returns:
         None
     """
-    system_id_map = full_plots_df.copy()
+    system_id_map = full_df_plots.copy()
     system_id_map["plot_id"] = system_id_map["plot_id"].astype(str)
     system_id_map = system_id_map.set_index("plot_id")["system_id"].to_dict()
 

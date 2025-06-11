@@ -4,7 +4,7 @@ import datetime
 @dataclass
 class Event:
     event_id: str
-    plots_df: pd.DataFrame
+    df_plots: pd.DataFrame
     
 @dataclass
 class EventWithWhiteTracks(Event):

@@ -34,7 +34,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         if event_data is None or event_id != event_data.event_id:
             raise ValueError("Event not loaded. Please load it first from the UI.")
 
-        df_plots = event_data.plots_df.copy()
+        df_plots = event_data.df_plots.copy()
 
         # Step 1: Build or get cached KDTree
         tree, all_keys = build_kdtree_with_cache(df_plots)

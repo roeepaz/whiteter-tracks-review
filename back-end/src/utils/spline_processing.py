@@ -18,17 +18,17 @@ def generate_smoothed_track_from_plots(selected_plots: List[Dict], smoothing_fac
     """
     
     # Convert selected plots to a DataFrame
-    selected_plots_df = pd.DataFrame(selected_plots)
+    selected_df_plots = pd.DataFrame(selected_plots)
 
 
     # Sort the DataFrame by the 't' column in ascending order
-    selected_plots_df = selected_plots_df.sort_values(by='t')
+    selected_df_plots = selected_df_plots.sort_values(by='t')
 
     # Extract x, y, z, and t values
-    x_list = selected_plots_df['x'].tolist()
-    y_list = selected_plots_df['y'].tolist()
-    z_list = selected_plots_df['z'].tolist()
-    u = selected_plots_df['t'].tolist()
+    x_list = selected_df_plots['x'].tolist()
+    y_list = selected_df_plots['y'].tolist()
+    z_list = selected_df_plots['z'].tolist()
+    u = selected_df_plots['t'].tolist()
     # Generate spline
     points = np.array([x_list, y_list, z_list])
     spline_xyz = generate_ecef_spline_with_time(points, u, smoothing_factor)

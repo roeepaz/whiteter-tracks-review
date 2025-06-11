@@ -17,9 +17,9 @@ class TrackIDRecommendation(AbstractRecommendationStrategy):
         Raises:
             ValueError: If no plot or track data is available for the event.
         """
-        plots_df = load_event(event_id).plots_df
+        df_plots = load_event(event_id).df_plots
 
-        if plots_df.empty or 'track_id' not in plots_df.columns:
+        if df_plots.empty or 'track_id' not in df_plots.columns:
             raise ValueError(f"No plot or track data for event '{event_id}'")
 
         if not selected_plots:
@@ -32,7 +32,7 @@ class TrackIDRecommendation(AbstractRecommendationStrategy):
 
         # Extract unique track_ids for the selected plots
         track_ids = (
-            plots_df
+            df_plots
             .merge(selected_keys_df, on=['plot_id', 'system_id'])
             ['track_id']
         )
@@ -41,4 +41,4 @@ class TrackIDRecommendation(AbstractRecommendationStrategy):
             return []
         
         # Return all plots with those track_ids
-        return plots_df[plots_df['track_id'].isin(track_ids)].to_dict(orient='records')
+        return df_plots[df_plots['track_id'].isin(track_ids)].to_dict(orient='records')

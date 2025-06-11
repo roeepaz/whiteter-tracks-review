@@ -39,26 +39,26 @@ def load_event(event_id: str) -> EventWithWhiteTracks:
     white_tracks_file = get_config_value('events_tracks_file_name')
     white_track_correlations_file   = get_config_value('events_plots_track_correlation_file_name')
 
-    plots_df            = safe_csv_read(event_path / f"{plots_file}.csv")
+    df_plots            = safe_csv_read(event_path / f"{plots_file}.csv")
     correlations_df         = safe_csv_read(event_path / f"{plots_correlations_file}.csv")
     white_tracks_df         = safe_csv_read(event_path / f"{white_tracks_file}.csv")
     white_track_corrs_df    = safe_csv_read(event_path / f"{white_track_correlations_file}.csv")
 
     # Always produce a plots_with_tracks_id_df
     if not correlations_df.empty and {"plot_id", "system_id", "track_id"}.issubset(correlations_df.columns):
-        plots_with_tracks_id_df = plots_df.merge(
+        plots_with_tracks_id_df = df_plots.merge(
             correlations_df[["plot_id", "system_id", "track_id"]],
             on=["plot_id", "system_id"],
             how="left",
         )
         plots_with_tracks_id_df["track_id"] = plots_with_tracks_id_df["track_id"].fillna(-1)
     else:
-        plots_with_tracks_id_df = plots_df.copy()
+        plots_with_tracks_id_df = df_plots.copy()
         plots_with_tracks_id_df["track_id"] = -1
 
     event = EventWithWhiteTracks(
         event_id=event_id,
-        plots_df=plots_with_tracks_id_df,
+        df_plots=plots_with_tracks_id_df,
         white_tracks_df=white_tracks_df,
         white_track_correlations_df=white_track_corrs_df
     )
