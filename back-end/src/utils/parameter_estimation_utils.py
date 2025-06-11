@@ -1,25 +1,58 @@
 
 import numpy as np
 import pandas as pd
-from utils.distance_metrics import minkowski_distance_plus_time, compute_distances_to_center
+from utils.distance_metrics import compute_distances_to_center
 from sklearn.neighbors import NearestNeighbors
+from config.constants import (
+    K_NEIGHBORS,
+    RADIUS_SCALING_FACTOR,
+    MIN_CLUSTERING_EPSILON,
+    ADAPTIVE_RADIUS,
+    MAX_CLUSTERING_EPSILON,
+    DEFAULT_AVG_VELOCITY,
+    ADAPTIVE_EPS_SCALING,
+    DEFAULT_LAMBDA_T
+)
 
-def estimate_clustering_radius(coords, idx, k=6, factor=1.5) -> float:
+# This method is geometrically simple but not ideal for dynamic spatiotemporal data.
+# It estimates the clustering radius based only on spatial neighbor distances
+def estimate_clustering_radius(coords, idx, k=K_NEIGHBORS, factor=RADIUS_SCALING_FACTOR) -> float:
+    """
+    Estimate a local clustering radius for a given point based on k nearest neighbors.
+
+    This function calculates the average distance from a given point to its k nearest spatial neighbors,
+    then scales it by a constant factor. It is commonly used as a simple proxy for local density.
+
+    Limitations:
+        - Time is not considered, so results may be inaccurate for dynamic or temporal data.
+        - The scaling factor (`factor`) is arbitrary and may not generalize across datasets.
+        - Assumes all spatial dimensions are equally relevant (ignores velocity or directionality).
+        - Returns a hardcoded fallback (100.0) if there are too few points.
+
+    Parameters:
+    coords (List[List[float]]): All data points as coordinate vectors (e.g., [[x, y, z], ...])
+    idx (int): Index of the current point for which to estimate the radius
+    k (int): Number of nearest neighbors to consider (default: K_NEIGHBORS)
+    factor (float): A scaling factor to stretch/shrink the average distance (default: RADIUS_SCALING_FACTOR)
+
+    Returns:
+        float: Estimated radius to be used for clustering algorithms like DBSCAN
+    """
     if len(coords) <= k:
-        return 100.0
-    nbrs = NearestNeighbors(n_neighbors=k+1).fit(coords)
+        return MIN_CLUSTERING_EPSILON
+    nbrs = NearestNeighbors(n_neighbors=k + 1).fit(coords)
     distances, _ = nbrs.kneighbors([coords[idx]])
-    avg = np.mean(distances[:, 1:])
+    avg = np.mean(distances[:, 1:])  # Exclude distance to self
     return avg * factor
 
 def estimate_adaptive_clustering_radius(
     df: pd.DataFrame,
     center_plot: dict,
-    radius: float = 5000,
-    max_eps: float = 3000,
-    v_avg: float = 600,
-    factor: float = 3.5,
-    lambda_t: float = 0.8
+    radius: float = ADAPTIVE_RADIUS,
+    max_eps: float = MAX_CLUSTERING_EPSILON,
+    v_avg: float = DEFAULT_AVG_VELOCITY,
+    factor: float = ADAPTIVE_EPS_SCALING,
+    lambda_t: float = DEFAULT_LAMBDA_T
 ) -> float:
     """
     Estimate eps based on number of neighbors within a fixed spatial+temporal radius.

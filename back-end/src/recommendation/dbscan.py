@@ -6,6 +6,7 @@ from utils.distance_metrics import minkowski_distance_plus_time
 from recommendation.utils import compute_local_eps, compute_local_v_avg
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event
+from config.constants import DEFAULT_LAMBDA_T
 from recommendation.build_tree_cache import (
     build_kdtree_with_cache,
     filter_relevant_plots,
@@ -55,7 +56,6 @@ class DBSCANRecommendation(RecommendationStrategy):
 
         # Step 4: Cluster expansion
         cluster_id = 0
-        lambda_t = 0.8  # time weighting factor
 
         for root_plot in selected_plots:
             root_idx = self._find_plot_index(df, root_plot)
@@ -64,7 +64,7 @@ class DBSCANRecommendation(RecommendationStrategy):
 
             print(f'--> Root {cluster_id}: eps={df.at[root_idx, "eps"]:.2f}, v_avg={df.at[root_idx, "v_avg"]:.2f}')
             df.at[root_idx, 'cluster'] = cluster_id
-            self._expand_cluster(df, root_idx, cluster_id, lambda_t)
+            self._expand_cluster(df, root_idx, cluster_id, DEFAULT_LAMBDA_T)
             cluster_id += 1
 
         return df[df['cluster'] != -1].to_dict(orient='records')
@@ -95,7 +95,7 @@ class DBSCANRecommendation(RecommendationStrategy):
         df: pd.DataFrame,
         root_idx: int,
         cluster_id: int,
-        lambda_t: float
+        lambda_t: float = DEFAULT_LAMBDA_T
     ) -> None:
         """Expand a cluster from a root plot using breadth-first search.
 

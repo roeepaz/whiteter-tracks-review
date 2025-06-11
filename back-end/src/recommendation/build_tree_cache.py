@@ -5,8 +5,13 @@ import numpy as np
 from threading import Lock
 from scipy.spatial import KDTree
 from cachetools import LRUCache
+from config.constants import (
+    DEFAULT_TIME_WEIGHT,
+    DEFAULT_FILTER_RADIUS,
+    KDTREE_CACHE_MAXSIZE
+)
 
-_kdtree_cache: LRUCache = LRUCache(maxsize=10)
+_kdtree_cache: LRUCache = LRUCache(maxsize=KDTREE_CACHE_MAXSIZE)
 _kdtree_lock: Lock = Lock()
 
 def df_hash(df: pd.DataFrame) -> str:
@@ -22,7 +27,7 @@ def df_hash(df: pd.DataFrame) -> str:
         pd.util.hash_pandas_object(df, index=True).values
     ).hexdigest()
 
-def build_kdtree_with_cache(df: pd.DataFrame, time_weight: float = 1.0) -> Tuple[KDTree, List[Tuple[int, int]]]:
+def build_kdtree_with_cache(df: pd.DataFrame, time_weight: float = DEFAULT_TIME_WEIGHT) -> Tuple[KDTree, List[Tuple[int, int]]]:
     """Build or retrieve a cached 4D KDTree with time-weighted coordinates.
 
     Parameters:
@@ -62,8 +67,8 @@ def filter_relevant_plots(
     tree: KDTree,
     all_keys: List[Tuple[int, int]],
     selected_plots: List[Dict],
-    radius: float = 15000,
-    time_weight: float = 1.0
+    filter_radius: float = DEFAULT_FILTER_RADIUS,
+    time_weight: float = DEFAULT_TIME_WEIGHT
 ) -> pd.DataFrame:
     """Filter plots within a time-weighted 4D radius of selected plots.
 
@@ -92,7 +97,7 @@ def filter_relevant_plots(
 
     matching_keys = set()
     for point in query_points:
-        result_indices = tree.query_ball_point(point, r=radius)
+        result_indices = tree.query_ball_point(point, r=filter_radius)
         matching_keys.update(all_keys[i] for i in result_indices)
 
     df = df.copy()

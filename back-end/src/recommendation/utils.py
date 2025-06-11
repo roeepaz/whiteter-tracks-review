@@ -4,6 +4,8 @@ import hashlib
 from typing import List, Dict
 from threading import Lock
 from collections import OrderedDict
+
+import pandas as pd
 from utils.parameter_estimation_utils import estimate_adaptive_clustering_radius
 from utils.distance_metrics import estimate_velocity_from_density
 # Cache settings
@@ -119,3 +121,24 @@ def compute_local_eps(
             local_eps_cache.popitem(last=False)
 
     return local_eps
+
+def find_plot_index(df: pd.DataFrame, plot: dict) -> int:
+    """Find the row index of a given plot in the DataFrame.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame containing plot data.
+        plot (dict): Plot record, must include 'plot_id' and 'system_id' keys.
+
+    Returns:
+        int: Index of the matching plot row in `df`.
+
+    Raises:
+        ValueError: If no matching plot is found.
+    """
+    matches = df[
+        (df['plot_id'] == plot['plot_id']) &
+        (df['system_id'] == plot['system_id'])
+    ]
+    if matches.empty:
+        raise ValueError(f"Root plot not found: {plot}")
+    return matches.index[0]

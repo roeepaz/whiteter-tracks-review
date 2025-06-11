@@ -5,11 +5,11 @@ from cachetools import LRUCache
 from threading import Lock
 from pathlib import Path
 from utils.data_utils import safe_csv_read
+from config.constants import EVENTS_CACHE_MAXSIZE
 
 EVENTS_FOLDER = get_config_value("events_folder")
-_event_cache: LRUCache = LRUCache(maxsize=10)  # Cache up to 10 events
+_event_cache: LRUCache = LRUCache(maxsize=EVENTS_CACHE_MAXSIZE)  # Cache up to 10 events
 _event_cache_lock: Lock = Lock()
-
 
 def load_event(event_id: str) -> EventWithWhiteTracks:
     """Load event data from disk or cache.

@@ -1,8 +1,16 @@
 from typing import Dict, List
 import pandas as pd
 import numpy as np
+from config.constants import (
+    DEFAULT_LAMBDA_T,
+    DEFAULT_AVG_VELOCITY,
+    FALLBACK_VELOCITY,
+    MINIMAL_VELOCITY,
+    MAX_POSSIBLE_VELOCITY,
+    VELOCITY_ALPHA
+)
 
-def minkowski_distance_plus_time(point1, point2,  lambda_t=0.8, v_avg=1.0) -> float:
+def minkowski_distance_plus_time(point1, point2,  lambda_t=DEFAULT_LAMBDA_T, v_avg=DEFAULT_AVG_VELOCITY) -> float:
     """
     Calculate Minkowski distance for two plots (x, y, z coordinates + time).
 
@@ -27,8 +35,8 @@ def minkowski_distance_plus_time(point1, point2,  lambda_t=0.8, v_avg=1.0) -> fl
 def compute_distances_to_center(
     df: pd.DataFrame,
     center_plot: dict,
-    v_avg: float = 600,
-    lambda_t: float = 0.8
+    v_avg: float = DEFAULT_AVG_VELOCITY,
+    lambda_t: float = DEFAULT_LAMBDA_T
 ) -> np.ndarray:
     """Vectorize computation of combined spatial + temporal distances to a center plot.
 
@@ -95,7 +103,7 @@ def calculate_average_velocity(neighbor_plots: List[Dict[str, float]]) -> float:
         """    
     # 1. Early exit for too few samples
     if len(neighbor_plots) < 2:
-        return 700.0
+        return FALLBACK_VELOCITY
 
     # 2. Sort by timestamp to ensure forward progression
     sorted_plots = sorted(neighbor_plots, key=lambda p: p['t'])
@@ -114,12 +122,12 @@ def calculate_average_velocity(neighbor_plots: List[Dict[str, float]]) -> float:
 
     # 4. Handle zero total time
     if total_time == 0:
-        return 1.0
+        return MINIMAL_VELOCITY
 
     # 5. Final average speed
     return total_dist / total_time
 
-def estimate_velocity_from_density(neighbor_plots, max_velocity=1000, alpha=0.1) -> float:
+def estimate_velocity_from_density(neighbor_plots, max_velocity=MAX_POSSIBLE_VELOCITY, alpha=VELOCITY_ALPHA) -> float:
     """
     Estimate velocity based on number of neighbor plots (density).
 
@@ -129,7 +137,12 @@ def estimate_velocity_from_density(neighbor_plots, max_velocity=1000, alpha=0.1)
         neighbor_plots (List[Dict]): plots around a central point
         max_velocity (float): maximum possible velocity
         alpha (float): density sensitivity factor (higher → more aggressive drop)
+            When to Adjust alpha?
+                Increase alpha when:
+                You want to penalize dense clusters more (e.g., sharp turns, stationarity).
 
+                Decrease alpha when:
+                You want to be more tolerant of density and assume more uniform velocity across different regions
     Returns:
         float: estimated average velocity
     """

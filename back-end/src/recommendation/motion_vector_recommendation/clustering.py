@@ -1,16 +1,24 @@
 from typing import List, Dict, Optional, Tuple
-from collections import deque, defaultdict
+from collections import deque
 import numpy as np
 import pandas as pd
 from utils.distance_metrics import minkowski_distance_plus_time
 from recommendation.build_tree_cache import build_kdtree_with_cache
-
+from utils import find_plot_index
+from config.constants import (
+    DEFAULT_LAMBDA_T,
+    DEFAULT_TIME_WEIGHT,
+    EPS_SCALING_FACTOR,
+    MAX_EUCLIDEAN_DISTANCE_TO_CENTER,
+    MAX_KDTREE_RADIUS,
+    DBSCAN_MIN_SAMPLES
+)
 
 def split_initial_clusters(
     selected_plots: List[dict],
     df_plots: pd.DataFrame,
     coords: np.ndarray,
-    lambda_t: float = 0.8
+    lambda_t: float = DEFAULT_LAMBDA_T
 ) -> Tuple[List[List[dict]], List[Tuple[float, float]]]:
     """Cluster user-selected plots using space-time distance.
 
@@ -43,13 +51,9 @@ def split_initial_clusters(
         cluster = []
         clustered_ids.add(plot_key)
 
-        root_idx = next(
-            (i for i, p in enumerate(df_plots.to_dict(orient='records'))
-             if all(np.isclose(p[k], plot[k]) for k in ['x', 'y', 'z', 't'])),
-            None
-        )
+        root_idx = find_plot_index(df_plots,plot)
 
-        eps = df_plots.iloc[root_idx]['eps'] *1.5
+        eps = df_plots.iloc[root_idx]['eps'] * EPS_SCALING_FACTOR #I want a slightly larger search radius.
         v_avg = df_plots.iloc[root_idx]['v_avg']
         cluster_params.append((eps, v_avg))
 
@@ -87,7 +91,7 @@ def expand_cluster(
     eps: float,
     v_avg: float,
     extra_candidates: Optional[List[List[dict]]] = None,
-    max_d: float = 7000
+    max_d: float = MAX_EUCLIDEAN_DISTANCE_TO_CENTER
 ) -> List[dict]:
     """Expand a user cluster by absorbing nearby plots.
 
@@ -160,9 +164,8 @@ def custom_adaptive_dbscan(
     plots: List[Dict],
     v_avg_list: np.ndarray,
     eps_list: np.ndarray,
-    max_dist_from_root: float = 15_000,
-    min_samples: int = 5,
-    lambda_t: float = 0.8
+    min_samples: int = DBSCAN_MIN_SAMPLES,
+    lambda_t: float = DEFAULT_LAMBDA_T
 ) -> np.ndarray:
     """Perform adaptive DBSCAN clustering using local eps and velocity.
 
@@ -188,7 +191,7 @@ def custom_adaptive_dbscan(
     visited = set()
     cluster_id = 0
 
-    tree, _ = build_kdtree_with_cache(df_plots, time_weight=1.0)
+    tree, _ = build_kdtree_with_cache(df_plots, time_weight=DEFAULT_TIME_WEIGHT)
     kd_coords = df_plots[['x', 'y', 'z', 't']].to_numpy()
 
     for i in range(n):
@@ -200,7 +203,7 @@ def custom_adaptive_dbscan(
         v_avg_root = v_avg_list[i]
         eps_root = eps_list[i]
 
-        candidate_idxs = tree.query_ball_point(kd_coords[i], r=max_dist_from_root)
+        candidate_idxs = tree.query_ball_point(kd_coords[i], r=MAX_KDTREE_RADIUS)
         neighbors = [
             j for j in candidate_idxs if j != i and
             minkowski_distance_plus_time(root_plot, plots[j], v_avg=v_avg_root, lambda_t=lambda_t) <= eps_root
@@ -217,7 +220,7 @@ def custom_adaptive_dbscan(
                 curr_eps = eps_list[curr_idx]
                 curr_v_avg = v_avg_list[curr_idx]
 
-                candidate_idxs = tree.query_ball_point(kd_coords[curr_idx], r=max_dist_from_root)
+                candidate_idxs = tree.query_ball_point(kd_coords[curr_idx], r=MAX_KDTREE_RADIUS)
                 new_neighbors = [
                     j for j in candidate_idxs if j != curr_idx and
                     minkowski_distance_plus_time(curr_plot, plots[j], v_avg=curr_v_avg, lambda_t=lambda_t) <= curr_eps

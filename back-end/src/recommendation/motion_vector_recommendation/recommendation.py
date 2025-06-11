@@ -1,4 +1,5 @@
 from typing import List
+import pandas as pd
 import numpy as np
 from recommendation.base import RecommendationStrategy
 from recommendation.motion_vector_recommendation.clustering import split_initial_clusters, expand_cluster, custom_adaptive_dbscan
@@ -8,7 +9,18 @@ from recommendation.utils import compute_local_eps, compute_local_v_avg
 from utils.distance_metrics import minkowski_distance_plus_time
 from events_logic.event_cache import load_event
 from custom_types import EventWithWhiteTracks
-import pandas as pd
+from config.constants import (
+    MIN_VALID_CLUSTER_SIZE,
+    MAX_CLUSTER_EXPANSION_ATTEMPTS,
+    EVENT_CLUSTER_ID_START,
+    SPATIOTEMPORAL_JUMP_LIMIT,
+    MATCHING_LAMBDA_T,
+    CENTER_MATCH_LAMBDA_T,
+    DEFLECTION_BASE,
+    DEFLECTION_PER_SECOND,
+    DEFLECTION_MAX
+)
+
 class MotionVectorRecommendation(RecommendationStrategy): 
     def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
         """Generate motion vector–based track recommendations.
@@ -62,8 +74,6 @@ class MotionVectorRecommendation(RecommendationStrategy):
         self,
         df_plots: pd.DataFrame,
         selected_plots: List[dict],
-        min_size: int = 7,
-        max_attempts: int = 9
     ) -> pd.DataFrame:
         """Build and validate user clusters using motion vectors.
 
@@ -89,11 +99,11 @@ class MotionVectorRecommendation(RecommendationStrategy):
         current_cluster_id = 0
 
         # Small clusters available for expansion
-        extra_candidates = [cluster for cluster in subgroups if not is_valid_cluster(cluster, min_size)]
+        extra_candidates = [cluster for cluster in subgroups if not is_valid_cluster(cluster, MIN_VALID_CLUSTER_SIZE)]
 
         for cluster in subgroups:
             attempts = 0
-            while not is_valid_cluster(cluster, min_size) and attempts < max_attempts:
+            while not is_valid_cluster(cluster, MIN_VALID_CLUSTER_SIZE) and attempts < MAX_CLUSTER_EXPANSION_ATTEMPTS:
                 indices = self._find_cluster_indices(df_plots, cluster)
                 v_avg = df_plots.loc[indices, 'v_avg'].mean()
                 eps = df_plots.loc[indices, 'eps'].mean()
@@ -109,7 +119,7 @@ class MotionVectorRecommendation(RecommendationStrategy):
 
                 attempts += 1
 
-            if is_valid_cluster(cluster, min_size):
+            if is_valid_cluster(cluster, MIN_VALID_CLUSTER_SIZE):
                 cluster_keys = {(p['plot_id'], p['system_id']) for p in cluster}
                 indices = df_plots[df_plots['plot_key'].isin(cluster_keys)].index.tolist()
 
@@ -152,7 +162,7 @@ class MotionVectorRecommendation(RecommendationStrategy):
         eps_list = df_remaining['eps'].values
 
         cluster_array = custom_adaptive_dbscan(df_remaining,plots, v_avg_list, eps_list)
-        event_cluster_start_id = 1000
+        event_cluster_start_id = EVENT_CLUSTER_ID_START
         cluster_id_map = {}
 
         for idx, cid in enumerate(cluster_array):
@@ -184,12 +194,12 @@ class MotionVectorRecommendation(RecommendationStrategy):
         """
         print("\nMatching user clusters with event clusters...")
 
-        user_ids = sorted(df_plots[df_plots['cluster'] < 1000]['cluster'].unique())
-        event_ids = sorted(df_plots[df_plots['cluster'] >= 1000]['cluster'].unique())
+        user_ids = sorted(df_plots[df_plots['cluster'] < EVENT_CLUSTER_ID_START]['cluster'].unique())
+        event_ids = sorted(df_plots[df_plots['cluster'] >= EVENT_CLUSTER_ID_START]['cluster'].unique())
         matched = set()
         i = 0
 
-        spatial_temporal_jump_limit = 10_000  # Max allowed combined (space + time) distance in meters
+        spatial_temporal_jump_limit = SPATIOTEMPORAL_JUMP_LIMIT  # Max allowed combined (space + time) distance in meters
 
         while i < len(user_ids):
             uid = user_ids[i]
@@ -244,7 +254,7 @@ class MotionVectorRecommendation(RecommendationStrategy):
 
                 # New: Use minkowski_distance_plus_time for spatial-temporal jump check
                 real_spatial_temporal_dist = minkowski_distance_plus_time(
-                    user_plot, event_plot, p=2, lambda_t=1, v_avg=v_avg_avg
+                    user_plot, event_plot, lambda_t=MATCHING_LAMBDA_T, v_avg=v_avg_avg
                 )
                 if real_spatial_temporal_dist > spatial_temporal_jump_limit:
                     continue  # too far in space-time, skip
@@ -254,7 +264,7 @@ class MotionVectorRecommendation(RecommendationStrategy):
 
                 # Compute average distance to event cluster center
                 predicted = calc_future_center_of_mass(u_vec, u_center, dt)
-                avg_dist = calc_distance_between_two_center_mass(predicted, e_center,v_avg_avg,lambda_t=0.3)
+                avg_dist = calc_distance_between_two_center_mass(predicted, e_center,v_avg_avg,lambda_t=CENTER_MATCH_LAMBDA_T)
                 # Dynamic matching limit
                 dynamic_limit = self._dynamic_deflection_limit(dt)
 
@@ -311,7 +321,5 @@ class MotionVectorRecommendation(RecommendationStrategy):
         Returns:
             float: Maximum allowed deflection distance, capped by a predetermined maximum.
         """
-        base_deflection = 6000
-        deflection_per_second = 750
-        max_deflection = 9000
-        return min(base_deflection + deflection_per_second * dt, max_deflection)
+        return min(DEFLECTION_BASE + DEFLECTION_PER_SECOND * dt, DEFLECTION_MAX)
+

@@ -2,7 +2,11 @@ import sys
 from typing import List, Tuple, Optional
 import numpy as np
 from custom_types.TimedPoint import TimedPoint
-
+from config.constants import (
+    REPRESENTATIVE_COM_SIZE,
+    MOTION_VECTOR_SIZE,
+    DEFAULT_LAMBDA_T,
+)
 def compute_average_axis_speed_by_start_and_end(cluster: List[dict]) -> np.ndarray:
     """Computes the average speed vector in the x, y, and z axes using the first and last points of a cluster.
 
@@ -26,7 +30,7 @@ def compute_average_axis_speed_by_start_and_end(cluster: List[dict]) -> np.ndarr
     return np.array([vx, vy, vz])
 
 
-def calc_representative_center_of_mass(cluster: List[dict], k: int = 8) -> Optional[TimedPoint]:
+def calc_representative_center_of_mass(cluster: List[dict], k: int = REPRESENTATIVE_COM_SIZE) -> Optional[TimedPoint]:
     """Calculates the 4D center of mass for the initial segment of a cluster.
 
     Parameters:
@@ -50,7 +54,7 @@ def calc_representative_center_of_mass(cluster: List[dict], k: int = 8) -> Optio
     return TimedPoint(x, y, z, t)
 
 
-def create_motion_vector(cluster: List[dict], k: int = 7) -> Tuple[np.ndarray, TimedPoint]:
+def create_motion_vector(cluster: List[dict], k: int = MOTION_VECTOR_SIZE) -> Tuple[np.ndarray, TimedPoint]:
     """Generates a motion vector and center of mass from the latest points of a cluster.
 
     Parameters:
@@ -112,8 +116,7 @@ def calc_distance_between_two_center_mass(
     p1: TimedPoint,
     p2: TimedPoint,
     v_avg: float,
-    lambda_t: float = 0.8,
-    p: int = 2
+    lambda_t: float = DEFAULT_LAMBDA_T,
 ) -> float:
     """Computes a time-weighted Minkowski distance between two 4D points.
 
@@ -137,4 +140,4 @@ def calc_distance_between_two_center_mass(
     dx = abs(p1.x - p2.x)
     dy = abs(p1.y - p2.y)
     dz = abs(p1.z - p2.z)
-    return (dx**p + dy**p + dz**p + dt**p) ** (1 / p)
+    return (dx**2 + dy**2 + dz**2 + dt**2) ** (1 / 2)
