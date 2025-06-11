@@ -5,7 +5,7 @@ from utils.coordinate_transforms import convert_ecef_to_lla
 from csaps import csaps
 from config_loader import get_config_value  
 
-def handle_selected_plots(selected_plots, smoothing_factor) -> List:
+def fit_smoothing_spline_to_plots(selected_plots, smoothing_factor) -> List:
     """Generate a smoothing spline from the user-selected plots.
 
     Parameters:
