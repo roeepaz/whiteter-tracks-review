@@ -1,13 +1,13 @@
 from custom_types import EventWithWhiteTracks
-from config_loader import get_app_config_value
+from config_loader import get_app_config_value, get_constants_config_value
 import pandas as pd
 from cachetools import LRUCache
 from threading import Lock
 from pathlib import Path
 from utils.data_utils import safe_csv_read
-from config.constants import EVENTS_CACHE_MAXSIZE
 
 EVENTS_FOLDER = get_app_config_value("events_folder")
+EVENTS_CACHE_MAXSIZE = get_constants_config_value("EVENTS_CACHE_MAXSIZE")
 _event_cache: LRUCache = LRUCache(maxsize=EVENTS_CACHE_MAXSIZE)  # Cache up to 10 events
 _event_cache_lock: Lock = Lock()
 

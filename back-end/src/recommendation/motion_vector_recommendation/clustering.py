@@ -5,14 +5,16 @@ import pandas as pd
 from utils.distance_metrics import minkowski_distance_plus_time
 from recommendation.build_tree_cache import build_kdtree_with_cache
 from utils import find_plot_index
-from config.constants import (
-    DEFAULT_LAMBDA_T,
-    DEFAULT_TIME_WEIGHT,
-    EPS_SCALING_FACTOR,
-    MAX_EUCLIDEAN_DISTANCE_TO_CENTER,
-    MAX_KDTREE_RADIUS,
-    DBSCAN_MIN_SAMPLES
-)
+from config_loader import get_constants_config_value
+
+DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
+EPS_SCALING_FACTOR = get_constants_config_value("EPS_SCALING_FACTOR")
+MAX_EUCLIDEAN_DISTANCE_TO_CENTER = get_constants_config_value("MAX_EUCLIDEAN_DISTANCE_TO_CENTER")
+
+DBSCAN_MIN_SAMPLES = get_constants_config_value("DBSCAN_MIN_SAMPLES")
+DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
+DEFAULT_TIME_WEIGHT = get_constants_config_value("DEFAULT_TIME_WEIGHT")
+MAX_KDTREE_RADIUS = get_constants_config_value("MAX_KDTREE_RADIUS")
 
 def split_initial_clusters(
     selected_plots: List[dict],
@@ -91,7 +93,7 @@ def expand_cluster(
     eps: float,
     v_avg: float,
     extra_candidates: Optional[List[List[dict]]] = None,
-    max_d: float = MAX_EUCLIDEAN_DISTANCE_TO_CENTER
+    MAX_EUCLIDEAN_DISTANCE_TO_CENTER: float = MAX_EUCLIDEAN_DISTANCE_TO_CENTER
 ) -> List[dict]:
     """Expand a user cluster by absorbing nearby plots.
 
@@ -111,6 +113,7 @@ def expand_cluster(
           the Minkowski+time distance criteria and the Euclidean distance limit.
         - Updates the 'cluster' column in `df_plots` to reflect newly added plots.
     """
+    
     expanded = list(cluster)
     queue = deque(cluster)
 
@@ -146,7 +149,7 @@ def expand_cluster(
                 candidate['z'] - center[2],
             ])
 
-            if dist <= eps and dist_to_center <= max_d:
+            if dist <= eps and dist_to_center <= MAX_EUCLIDEAN_DISTANCE_TO_CENTER:
                 df_plots.loc[
                     (df_plots['plot_id'] == candidate['plot_id']) &
                     (df_plots['system_id'] == candidate['system_id']),

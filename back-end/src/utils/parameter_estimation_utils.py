@@ -4,16 +4,18 @@ import numpy as np
 import pandas as pd
 from utils.distance_metrics import compute_distances_to_center
 from sklearn.neighbors import NearestNeighbors
-from config.constants import (
-    K_NEIGHBORS,
-    RADIUS_SCALING_FACTOR,
-    MIN_CLUSTERING_EPSILON,
-    ADAPTIVE_RADIUS,
-    MAX_CLUSTERING_EPSILON,
-    DEFAULT_AVG_VELOCITY,
-    ADAPTIVE_EPS_SCALING,
-    DEFAULT_LAMBDA_T
-)
+from config_loader import get_constants_config_value
+
+K_NEIGHBORS = get_constants_config_value("K_NEIGHBORS")
+RADIUS_SCALING_FACTOR = get_constants_config_value("RADIUS_SCALING_FACTOR")
+MIN_CLUSTERING_EPSILON = get_constants_config_value("MIN_CLUSTERING_EPSILON")
+
+ADAPTIVE_RADIUS = get_constants_config_value("ADAPTIVE_RADIUS")
+MAX_CLUSTERING_EPSILON = get_constants_config_value("MAX_CLUSTERING_EPSILON")
+ADAPTIVE_EPS_SCALING = get_constants_config_value("ADAPTIVE_EPS_SCALING")
+
+DEFAULT_AVG_VELOCITY = get_constants_config_value("DEFAULT_AVG_VELOCITY")
+DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
 
 # This method is geometrically simple but not ideal for dynamic spatiotemporal data.
 # It estimates the clustering radius based only on spatial neighbor distances

@@ -6,11 +6,12 @@ from utils.distance_metrics import minkowski_distance_plus_time
 from recommendation.utils import compute_local_eps, compute_local_v_avg
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event
-from config.constants import DEFAULT_LAMBDA_T
+from config_loader import get_constants_config_value
 from recommendation.build_tree_cache import (
     build_kdtree_with_cache,
     filter_relevant_plots,
 )
+DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_TIME_WEIGHT")
 
 class DBSCANRecommendation(AbstractRecommendationStrategy):
     def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
@@ -95,7 +96,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         df_filtered_plots: pd.DataFrame,
         root_idx: int,
         cluster_id: int,
-        lambda_t: float = DEFAULT_LAMBDA_T
+        DEFAULT_LAMBDA_T: float = DEFAULT_LAMBDA_T
     ) -> None:
         """Expand a cluster from a root plot using breadth-first search.
 
@@ -134,7 +135,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
 
                 distance = minkowski_distance_plus_time(
                     current_plot, neighbor_plot,
-                    lambda_t=lambda_t, v_avg=avg_v
+                    lambda_t=DEFAULT_LAMBDA_T, v_avg=avg_v
                 )
 
                 if distance < eps:

@@ -2,11 +2,12 @@ import sys
 from typing import List, Tuple, Optional
 import numpy as np
 from custom_types.TimedPoint import TimedPoint
-from config.constants import (
-    REPRESENTATIVE_COM_SIZE,
-    MOTION_VECTOR_SIZE,
-    DEFAULT_LAMBDA_T,
-)
+from config_loader import get_constants_config_value
+
+REPRESENTATIVE_COM_SIZE = get_constants_config_value("REPRESENTATIVE_COM_SIZE")
+MOTION_VECTOR_SIZE = get_constants_config_value("MOTION_VECTOR_SIZE")
+DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
+
 def compute_average_axis_speed_by_start_and_end(cluster: List[dict]) -> np.ndarray:
     """Computes the average speed vector in the x, y, and z axes using the first and last points of a cluster.
 

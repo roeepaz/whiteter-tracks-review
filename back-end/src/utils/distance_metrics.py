@@ -1,14 +1,15 @@
 from typing import Dict, List
 import pandas as pd
 import numpy as np
-from config.constants import (
-    DEFAULT_LAMBDA_T,
-    DEFAULT_AVG_VELOCITY,
-    FALLBACK_VELOCITY,
-    MINIMAL_VELOCITY,
-    MAX_POSSIBLE_VELOCITY,
-    VELOCITY_ALPHA
-)
+from config_loader import get_constants_config_value
+
+DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
+DEFAULT_AVG_VELOCITY = get_constants_config_value("DEFAULT_AVG_VELOCITY")
+FALLBACK_VELOCITY = get_constants_config_value("FALLBACK_VELOCITY")
+MINIMAL_VELOCITY = get_constants_config_value("MINIMAL_VELOCITY")
+MAX_POSSIBLE_VELOCITY = get_constants_config_value("MAX_POSSIBLE_VELOCITY")
+VELOCITY_ALPHA = get_constants_config_value("VELOCITY_ALPHA")
+
 
 def minkowski_distance_plus_time(point1, point2,  lambda_t=DEFAULT_LAMBDA_T, v_avg=DEFAULT_AVG_VELOCITY) -> float:
     """

@@ -5,11 +5,11 @@ import numpy as np
 from threading import Lock
 from scipy.spatial import KDTree
 from cachetools import LRUCache
-from config.constants import (
-    DEFAULT_TIME_WEIGHT,
-    DEFAULT_FILTER_RADIUS,
-    KDTREE_CACHE_MAXSIZE
-)
+from config_loader import get_constants_config_value
+
+KDTREE_CACHE_MAXSIZE = get_constants_config_value("KDTREE_CACHE_MAXSIZE")
+DEFAULT_TIME_WEIGHT = get_constants_config_value("DEFAULT_TIME_WEIGHT")
+DEFAULT_FILTER_RADIUS = get_constants_config_value("DEFAULT_FILTER_RADIUS")
 
 _kdtree_cache: LRUCache = LRUCache(maxsize=KDTREE_CACHE_MAXSIZE)
 _kdtree_lock: Lock = Lock()
@@ -87,6 +87,7 @@ def filter_relevant_plots(
         - Queries the KDTree for each selected plot to find neighbors in 4D.
         - Maps neighbor indices back to df via all_keys.
     """
+    
     if not selected_plots:
         raise ValueError("selected_plots must not be empty")
 

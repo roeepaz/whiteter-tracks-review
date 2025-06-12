@@ -9,17 +9,20 @@ from recommendation.utils import compute_local_eps, compute_local_v_avg
 from utils.distance_metrics import minkowski_distance_plus_time
 from events_logic.event_cache import load_event
 from custom_types import EventWithWhiteTracks
-from config.constants import (
-    MIN_VALID_CLUSTER_SIZE,
-    MAX_CLUSTER_EXPANSION_ATTEMPTS,
-    EVENT_CLUSTER_ID_START,
-    SPATIOTEMPORAL_JUMP_LIMIT,
-    MATCHING_LAMBDA_T,
-    CENTER_MATCH_LAMBDA_T,
-    DEFLECTION_BASE,
-    DEFLECTION_PER_SECOND,
-    DEFLECTION_MAX
-)
+from config_loader import get_constants_config_value
+
+MIN_VALID_CLUSTER_SIZE = get_constants_config_value("MIN_VALID_CLUSTER_SIZE")
+MAX_CLUSTER_EXPANSION_ATTEMPTS = get_constants_config_value("MAX_CLUSTER_EXPANSION_ATTEMPTS")
+EVENT_CLUSTER_ID_START = get_constants_config_value("EVENT_CLUSTER_ID_START")
+
+SPATIOTEMPORAL_JUMP_LIMIT = get_constants_config_value("SPATIOTEMPORAL_JUMP_LIMIT")
+MATCHING_LAMBDA_T = get_constants_config_value("MATCHING_LAMBDA_T")
+CENTER_MATCH_LAMBDA_T = get_constants_config_value("CENTER_MATCH_LAMBDA_T")
+
+DEFLECTION_BASE = get_constants_config_value("DEFLECTION_BASE")
+DEFLECTION_PER_SECOND = get_constants_config_value("DEFLECTION_PER_SECOND")
+DEFLECTION_MAX = get_constants_config_value("DEFLECTION_MAX")
+
 
 class MotionVectorRecommendation(AbstractRecommendationStrategy): 
     def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
