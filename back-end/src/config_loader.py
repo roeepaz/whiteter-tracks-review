@@ -1,21 +1,33 @@
-import os
-import yaml  # PyYAML
-from functools import lru_cache
+from pathlib import Path
+import yaml
 
-APP_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config/app_config.yaml")
+# Config Paths
+CONFIG_DIR = Path(__file__).resolve().parent / "config"
+APP_CONFIG_PATH = CONFIG_DIR / "app_config.yaml"
+CONSTANTS_CONFIG_PATH = CONFIG_DIR / "constants.yaml"
 
-def load_app_config() -> dict:
-    """Load the YAML config file and return it as a dictionary."""
+# YAML Loader
+def load_yaml_config(path: Path) -> dict:
+    """Load a YAML file into a dictionary."""
     try:
-        with open(APP_CONFIG_PATH, "r") as file:
-            return yaml.safe_load(file) or {}
+        with path.open("r") as f:
+            return yaml.safe_load(f) or {}
     except Exception as e:
-        print(f"Error loading config: {e}")
+        print(f"Error loading config at {path}: {e}")
         return {}
 
-# Load config at startup
-CONFIG = load_app_config()
+# Load Both Configs at Startup
+APP_CONFIG = load_yaml_config(APP_CONFIG_PATH)
+CONSTANTS_CONFIG = load_yaml_config(CONSTANTS_CONFIG_PATH)
 
-def get_app_config_value(key: str, default=None) -> dict[dict]:
-    """Get a specific value from the config by key."""
-    return CONFIG.get(key, default)
+# Accessors 
+def load_app_config() -> dict:
+    return load_yaml_config(APP_CONFIG)
+
+def get_app_config_value(key: str, default=None):
+    """Fetch a key from the app config, with optional fallback."""
+    return APP_CONFIG.get(key, default)
+
+def get_constants_config_value(key: str, default=None):
+    """Fetch a key from the constants config, with optional fallback."""
+    return CONSTANTS_CONFIG.get(key, default)
