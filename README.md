@@ -56,7 +56,7 @@ npm run dev
 
 Configuration
 All server‐side config lives in back-end/resource/app_config.yaml (or .json).
-Use config_loader.get_config_value(key) in code to access values.
+Use config_loader.get_app_config_value(key) in code to access values.
 
 ## Documentation
 

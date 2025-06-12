@@ -4,13 +4,13 @@ from pathlib import Path
 import pandas as pd
 import json
 from flask import jsonify
-from config_loader import get_config_value
+from config_loader import get_app_config_value
 from events_logic.interface.AbstractEventsAPI import AbstractEventsAPI
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event, clear_event
 from enums.event_data_keys import EventDataKey
 
-EVENTS_FOLDER = Path(get_config_value('events_folder'))
+EVENTS_FOLDER = Path(get_app_config_value('events_folder'))
 
 class EventApi(AbstractEventsAPI):
 
@@ -78,9 +78,9 @@ class EventApi(AbstractEventsAPI):
             - Event-wide notes to 'notes.json'.
             Tracks are assigned new IDs and saved along with spline points and notes.
         """
-        events_folder = Path(get_config_value("events_folder"))
-        events_tracks_file_name = get_config_value('events_tracks_file_name')
-        events_plots_track_correlation_file_name = get_config_value('events_plots_track_correlation_file_name')
+        events_folder = Path(get_app_config_value("events_folder"))
+        events_tracks_file_name = get_app_config_value('events_tracks_file_name')
+        events_plots_track_correlation_file_name = get_app_config_value('events_plots_track_correlation_file_name')
 
         events_dir = events_folder / event_id
         tracks_file = events_dir / f"{events_tracks_file_name}.csv"

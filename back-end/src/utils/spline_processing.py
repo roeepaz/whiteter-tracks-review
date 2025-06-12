@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from utils.coordinate_transforms import convert_ecef_to_lla
 from csaps import csaps
-from config_loader import get_config_value  
+from config_loader import get_app_config_value  
 
 def generate_smoothed_track_from_plots(selected_plots: List[Dict], smoothing_factor: float) -> List[Dict]:
     """Generate a smoothing spline from the user-selected plots.
@@ -57,7 +57,7 @@ def generate_ecef_spline_with_time(points: Sequence[Sequence[float]],
     spline = csaps(u, points, smooth=smoothing_factor)
 
     min_t, max_t = u[0], u[-1]
-    sampling_rate = get_config_value('sampling_rate_per_second_for_spline')
+    sampling_rate = get_app_config_value('sampling_rate_per_second_for_spline')
     num_points = int((max_t - min_t) * sampling_rate)
     u_fine = np.linspace(min_t, max_t, num_points)
 

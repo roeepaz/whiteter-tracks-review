@@ -1,7 +1,7 @@
 from typing import List
 import pandas as pd
 import os
-from config_loader import get_config_value
+from config_loader import get_app_config_value
 from recommendation.AbstractRecommendationStrategy import AbstractRecommendationStrategy
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event

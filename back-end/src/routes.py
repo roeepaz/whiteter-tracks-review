@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, render_template
 import flask
 from utils.spline_processing import generate_smoothed_track_from_plots
 from recommendation.recomendations_manager import get_recommendation_base_on_strategy
-from config_loader import load_config
+from config_loader import load_app_config
 from utils.error_handling import handle_error
 
 class Routes:
@@ -34,7 +34,7 @@ class Routes:
                 Loads config and event list, then renders the home template.
             """
             try:
-                config = load_config()
+                config = load_app_config()
                 if self.handler is None:
                     raise RuntimeError("Handler not initialized")
 
@@ -69,7 +69,7 @@ class Routes:
                 Reads the local 'app_config.json' file and returns its content.
             """
             try:
-                config = load_config()
+                config = load_app_config()
                 return jsonify({"success": True, "data": config})
             except Exception as e:
                 return handle_error(e)
