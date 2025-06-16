@@ -10,7 +10,7 @@ from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event, clear_event
 from enums.event_data_keys import EventDataKey
 
-EVENTS_FOLDER = Path(get_app_config_value('events_folder'))
+EVENTS_FOLDER = Path(get_app_config_value('EVENTS_FOLDER'))
 
 class EventApi(AbstractEventsAPI):
 
@@ -78,9 +78,9 @@ class EventApi(AbstractEventsAPI):
             - Event-wide notes to 'notes.json'.
             Tracks are assigned new IDs and saved along with spline points and notes.
         """
-        events_folder = Path(get_app_config_value("events_folder"))
-        events_tracks_file_name = get_app_config_value('events_tracks_file_name')
-        events_plots_track_correlation_file_name = get_app_config_value('events_plots_track_correlation_file_name')
+        events_folder = Path(get_app_config_value("EVENTS_FOLDER"))
+        events_tracks_file_name = get_app_config_value('EVENTS_TRACKS_FILE_NAME')
+        events_plots_track_correlation_file_name = get_app_config_value('EVENTS_PLOTS_TRACK_CORRELATION_FILE_NAME')
 
         events_dir = events_folder / event_id
         tracks_file = events_dir / f"{events_tracks_file_name}.csv"

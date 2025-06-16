@@ -18,8 +18,8 @@ const ChooseRecommendationTypeModal: React.FC<ChooseRecommendationTypeModalProps
     const [ recommendationTypes, setRecommendationTypes] = useState<string[]>([]);
   
    useEffect(() => {
-      if (config?.recommedations_names) {
-        setRecommendationTypes(config.recommedations_names);
+      if (config?.RECOMMENDATIONS_NAMES) {
+        setRecommendationTypes(config.RECOMMENDATIONS_NAMES);
       } 
     }, [config]);
   const [selectedType, setSelectedType] = useState<string>("");

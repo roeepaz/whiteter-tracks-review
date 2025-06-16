@@ -1,11 +1,12 @@
+RECOMMENDATIONS_NAMES: ["stn", "trackid", "dbscan", "motion_vector"]
 
-{
-    "recommedations_names": ["stn","trackid","dbscan","motion_vector"],
-    "tags_for_white_track": ["rocket", "boom", "fighter", "terrorist"],
-    "sampling_rate_per_second_for_spline": 10,
-    "events_folder" : "C:/Users/roeep/OneDrive/Desktop/code-review/whiteter-tracks-review/back-end/resource/events",
-    "plots_file_name": "plots",
-    plots_correlations_file_name: "plots_correlations",
-    "events_tracks_file_name" : "white_tracks",
-    "events_plots_track_correlation_file_name" : "white_tracks_correlations"
-  }
+TAGS_FOR_WHITE_TRACK: ["rocket", "boom", "fighter","terrorist"]
+
+SAMPLING_RATE_PER_SECOND_FOR_SPLINE: 10
+
+EVENTS_FOLDER: C:/Users/roeep/OneDrive/Desktop/code-review/whiteter-tracks-review/back-end/resource/events
+
+PLOTS_FILE_NAME: plots
+PLOTS_CORRELATIONS_FILE_NAME: plots_correlations
+EVENTS_TRACKS_FILE_NAME: white_tracks
+EVENTS_PLOTS_TRACK_CORRELATION_FILE_NAME: white_tracks_correlations

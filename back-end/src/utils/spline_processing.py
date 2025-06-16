@@ -57,7 +57,7 @@ def generate_ecef_spline_with_time(points: Sequence[Sequence[float]],
     spline = csaps(u, points, smooth=smoothing_factor)
 
     min_t, max_t = u[0], u[-1]
-    sampling_rate = get_app_config_value('sampling_rate_per_second_for_spline')
+    sampling_rate = get_app_config_value('SAMPLING_RATE_PER_SECOND_FOR_SPLINE')
     num_points = int((max_t - min_t) * sampling_rate)
     u_fine = np.linspace(min_t, max_t, num_points)
 

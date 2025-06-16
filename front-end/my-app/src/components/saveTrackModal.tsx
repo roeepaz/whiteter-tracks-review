@@ -16,8 +16,8 @@ const CreateTrackModal: React.FC<CreateTrackModalProps> = ({ isOpen, onClose, on
   const [options, setOptions] = useState<string[]>([])
 
   useEffect(() => {
-    if (config?.tags_for_white_track) {
-      setOptions(config.tags_for_white_track);
+    if (config?.TAGS_FOR_WHITE_TRACK) {
+      setOptions(config.TAGS_FOR_WHITE_TRACK);
     } 
   }, [config]);
 

@@ -6,7 +6,7 @@ from threading import Lock
 from pathlib import Path
 from utils.data_utils import safe_csv_read
 
-EVENTS_FOLDER = get_app_config_value("events_folder")
+EVENTS_FOLDER = get_app_config_value("EVENTS_FOLDER")
 EVENTS_CACHE_MAXSIZE = get_constants_config_value("EVENTS_CACHE_MAXSIZE")
 _event_cache: LRUCache = LRUCache(maxsize=EVENTS_CACHE_MAXSIZE)  # Cache up to 10 events
 _event_cache_lock: Lock = Lock()
@@ -34,10 +34,10 @@ def load_event(event_id: str) -> EventWithWhiteTracks:
     if not event_path.exists():
         raise FileNotFoundError(f"Event '{event_id}' not found")
     
-    plots_file = get_app_config_value('plots_file_name')
-    plots_correlations_file = get_app_config_value('plots_correlations_file_name')
-    white_tracks_file = get_app_config_value('events_tracks_file_name')
-    white_track_correlations_file   = get_app_config_value('events_plots_track_correlation_file_name')
+    plots_file = get_app_config_value('PLOTS_FILE_NAME')
+    plots_correlations_file = get_app_config_value('PLOTS_CORRELATIONS_FILE_NAME')
+    white_tracks_file = get_app_config_value('EVENTS_TRACKS_FILE_NAME')
+    white_track_correlations_file   = get_app_config_value('EVENTS_PLOTS_TRACK_CORRELATION_FILE_NAME')
 
     df_plots            = safe_csv_read(event_path / f"{plots_file}.csv")
     correlations_df         = safe_csv_read(event_path / f"{plots_correlations_file}.csv")
