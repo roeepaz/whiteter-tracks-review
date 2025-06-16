@@ -94,7 +94,7 @@ def expand_cluster(
     eps: float,
     v_avg: float,
     extra_candidates: Optional[List[List[dict]]] = None,
-    MAX_EUCLIDEAN_DISTANCE_TO_CENTER: float = MAX_EUCLIDEAN_DISTANCE_TO_CENTER
+    max_eucliden_distance_to_center: float = MAX_EUCLIDEAN_DISTANCE_TO_CENTER
 ) -> List[dict]:
     """Expand a user cluster by absorbing nearby plots.
 
@@ -150,7 +150,7 @@ def expand_cluster(
                 candidate['z'] - center[2],
             ])
 
-            if dist <= eps and dist_to_center <= MAX_EUCLIDEAN_DISTANCE_TO_CENTER:
+            if dist <= eps and dist_to_center <= max_eucliden_distance_to_center:
                 df_plots.loc[
                     (df_plots['plot_id'] == candidate['plot_id']) &
                     (df_plots['system_id'] == candidate['system_id']),
