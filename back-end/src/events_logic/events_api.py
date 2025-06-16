@@ -5,7 +5,7 @@ import pandas as pd
 import json
 from flask import jsonify
 from config_loader import get_app_config_value
-from events_logic.interface.abstract_events_api import AbstractEventsAPI
+from events_logic.abstract_events_api import AbstractEventsAPI
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event, clear_event
 from enums.event_data_keys import EventDataKey
