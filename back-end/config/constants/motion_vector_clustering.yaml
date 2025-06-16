@@ -1,0 +1,6 @@
+# === Motion Vector Clustering ===
+
+EPS_SCALING_FACTOR: 1.5  # Increase eps slightly for initial clustering
+MAX_EUCLIDEAN_DISTANCE_TO_CENTER: 7000  # Max distance from cluster center (meters)
+MAX_KDTREE_RADIUS: 15000  # Search radius in KDTree for neighbors
+DBSCAN_MIN_SAMPLES: 5  # Min neighbors required to form a core point
