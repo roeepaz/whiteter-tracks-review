@@ -18,7 +18,7 @@ def df_hash(df: pd.DataFrame) -> str:
     """Generate a stable MD5 hash for a DataFrame.
 
     Parameters:
-        df (pd.DataFrame): The DataFrame to compute the hash for.
+        df: The DataFrame to compute the hash for.
 
     Returns:
         str: MD5 hash string representing the DataFrame’s content, suitable as a cache key.
@@ -31,11 +31,11 @@ def build_kdtree_with_cache(df_plots: pd.DataFrame, time_weight: float = DEFAULT
     """Build or retrieve a cached 4D KDTree with time-weighted coordinates.
 
     Parameters:
-        df (pd.DataFrame): Source DataFrame containing columns 'x', 'y', 'z', and 't'.
-        time_weight (float): Multiplier applied to the time dimension (default is 1.0).
+        df: Source DataFrame containing columns 'x', 'y', 'z', and 't'.
+        time_weight: Multiplier applied to the time dimension (default is 1.0).
 
     Returns:
-        Tuple[KDTree, List[Tuple[int, int]]]:
+        Tuple
             - KDTree: A tree built on coordinates [x, y, z, t * time_weight].
             - List[Tuple[int, int]]: Keys for each row as (plot_id, system_id).
 
@@ -73,12 +73,12 @@ def filter_relevant_plots(
     """Filter plots within a time-weighted 4D radius of selected plots.
 
     Parameters:
-        df (pd.DataFrame): DataFrame of all plots with columns ['x', 'y', 'z', 't'].
-        tree (KDTree): KDTree built on coordinates [x, y, z, t * time_weight].
-        all_keys (List[Tuple[int, int]]): List of (plot_id, system_id) tuples matching df rows.
-        selected_plots (List[dict]): List of plot dicts with keys 'x', 'y', 'z', 't'.
-        radius (float): Search radius in the 4D space (default: 15000).
-        time_weight (float): Multiplier for the time dimension (default: 1.0).
+        df: DataFrame of all plots with columns ['x', 'y', 'z', 't'].
+        tree: KDTree built on coordinates [x, y, z, t * time_weight].
+        all_keys: List of (plot_id, system_id) tuples matching df rows.
+        selected_plots: List of plot dicts with keys 'x', 'y', 'z', 't'.
+        radius: Search radius in the 4D space (default: 15000).
+        time_weight: Multiplier for the time dimension (default: 1.0).
 
     Returns:
         pd.DataFrame: Subset of df containing all plots found within the given radius of any selected plot.

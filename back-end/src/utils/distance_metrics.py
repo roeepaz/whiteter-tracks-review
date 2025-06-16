@@ -12,12 +12,10 @@ VELOCITY_ALPHA = get_constants_config_value("VELOCITY_ALPHA")
 
 
 def minkowski_distance_plus_time(point1, point2,  lambda_t=DEFAULT_LAMBDA_T, v_avg=DEFAULT_AVG_VELOCITY) -> float:
-    """
-    Calculate Minkowski distance for two plots (x, y, z coordinates + time).
+    """Calculate Minkowski distance for two plots (x, y, z coordinates + time).
 
     Parameters:
     - point1, point2: Dictionaries with keys 'x', 'y', 'z', 't'
-    - p: Minkowski power parameter (p=1: Manhattan, p=2: Euclidean, p>2: Higher penalty on large differences)
     - lambda_t: Weight for time importance
     - v_avg: Average velocity (meters/second) for converting time into distance
 
@@ -47,14 +45,10 @@ def compute_distances_to_center(
         **Assumption:** `df` contains columns ['plot_id', 'system_id', 'x', 'y', 'z', 't'].
 
         Parameters:
-            df_plots (pd.DataFrame):
-                DataFrame of all plots, indexed arbitrarily but containing the required columns.
-            center_plot (Dict[str, Any]):
-                A dict with keys 'plot_id' and 'system_id' identifying the center row in `df`.
-            v_avg (float):
-                Average velocity (m/s) for converting time differences into distances.
-            lambda_t (float):
-                Weight applied to the time component.
+            df_plots: DataFrame of all plots, indexed arbitrarily but containing the required columns.
+            center_plot: A dict with keys 'plot_id' and 'system_id' identifying the center row in `df`.
+            v_avg: Average velocity (m/s) for converting time differences into distances.
+            lambda_t:Weight applied to the time component.
 
         Returns:
             np.ndarray:
@@ -91,13 +85,12 @@ def calculate_average_velocity(neighbor_plots: List[Dict[str, float]]) -> float:
         interval reflects forward progression, avoiding negative or out‐of‐order intervals.
 
         Parameters:
-            neighbor_plots (List[Dict[str, float]]):
+            neighbor_plots:
                 A list of dictionaries, each containing:
                 - 'x', 'y', 'z' (float): spatial coordinates in meters
                 - 't' (float): timestamp in seconds
 
         Returns:
-            float:
                 - If fewer than 2 points are provided: returns 700.0 as a fallback.
                 - If total elapsed time is zero (all timestamps identical): returns 1.0.
                 - Otherwise: (total spatial distance) / (total time elapsed).
@@ -131,16 +124,16 @@ def calculate_average_velocity(neighbor_plots: List[Dict[str, float]]) -> float:
 
     return total_dist / total_time
 
-def estimate_velocity_from_density(neighbor_plots, max_velocity=MAX_POSSIBLE_VELOCITY, alpha=VELOCITY_ALPHA) -> float:
+def estimate_velocity_from_density(neighbor_plots: List[Dict], max_velocity : float=MAX_POSSIBLE_VELOCITY, alpha: float=VELOCITY_ALPHA) -> float:
     """
     Estimate velocity based on number of neighbor plots (density).
 
     The more plots → the lower the velocity.
 
     Parameters:
-        neighbor_plots (List[Dict]): plots around a central point
-        max_velocity (float): maximum possible velocity
-        alpha (float): density sensitivity factor (higher → more aggressive drop)
+        neighbor_plots: plots around a central point
+        max_velocity: maximum possible velocity
+        alpha: density sensitivity factor (higher → more aggressive drop)
             When to Adjust alpha?
                 Increase alpha when:
                 You want to penalize dense clusters more (e.g., sharp turns, stationarity).

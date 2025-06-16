@@ -19,9 +19,8 @@ DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
 
 # This method is geometrically simple but not ideal for dynamic spatiotemporal data.
 # It estimates the clustering radius based only on spatial neighbor distances
-def estimate_clustering_radius(coords, idx, k=K_NEIGHBORS, factor=RADIUS_SCALING_FACTOR) -> float:
-    """
-    Estimate a local clustering radius for a given point based on k nearest neighbors.
+def estimate_clustering_radius(coords: List[List[float]], idx: int, k: int=K_NEIGHBORS, factor: float=RADIUS_SCALING_FACTOR) -> float:
+    """Estimate a local clustering radius for a given point based on k nearest neighbors.
 
     This function calculates the average distance from a given point to its k nearest spatial neighbors,
     then scales it by a constant factor. It is commonly used as a simple proxy for local density.
@@ -33,13 +32,13 @@ def estimate_clustering_radius(coords, idx, k=K_NEIGHBORS, factor=RADIUS_SCALING
         - Returns a hardcoded fallback (100.0) if there are too few points.
 
     Parameters:
-    coords (List[List[float]]): All data points as coordinate vectors (e.g., [[x, y, z], ...])
-    idx (int): Index of the current point for which to estimate the radius
-    k (int): Number of nearest neighbors to consider (default: K_NEIGHBORS)
-    factor (float): A scaling factor to stretch/shrink the average distance (default: RADIUS_SCALING_FACTOR)
+    coords: All data points as coordinate vectors (e.g., [[x, y, z], ...])
+    idx : Index of the current point for which to estimate the radius
+    k: Number of nearest neighbors to consider (default: K_NEIGHBORS)
+    factor: A scaling factor to stretch/shrink the average distance (default: RADIUS_SCALING_FACTOR)
 
     Returns:
-        float: Estimated radius to be used for clustering algorithms like DBSCAN
+        Estimated radius to be used for clustering algorithms like DBSCAN
     """
     if len(coords) <= k:
         return MIN_CLUSTERING_EPSILON
@@ -63,14 +62,14 @@ def estimate_adaptive_clustering_radius(
     The more neighbors → the smaller the eps.
 
     Parameters:
-        plots (List[dict]): all plots
-        center_plot (dict): the plot to evaluate
-        radius (float): the fixed radius to check (with minkowski + time)
-        max_eps (float): the maximum eps allowed (for very sparse areas)
-        v_avg (float): average velocity to convert time to distance
+        plots: all plots
+        center_plot: the plot to evaluate
+        radius: the fixed radius to check (with minkowski + time)
+        max_eps: the maximum eps allowed (for very sparse areas)
+        v_avg: average velocity to convert time to distance
 
     Returns:
-        float: adaptive eps value
+        adaptive eps value
     """
     """Estimate eps based on count of neighbors within a given radius (vectorized)."""
     df_plots = pd.DataFrame(plots)

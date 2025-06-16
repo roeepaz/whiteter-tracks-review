@@ -11,7 +11,7 @@ class Routes:
         """Initialize the Routes handler by registering all Flask routes.
 
         Parameters:
-            app (Flask): The Flask application instance.
+            app: The Flask application instance.
             event_methods_instance (AbstractEventsAPI): Object that handles event logic (e.g., EventApi).
         """
         self.app = app
@@ -51,10 +51,10 @@ class Routes:
         def health()  -> Tuple[flask.Response, int]:
             """ Health check endpoint.
 
-            Output:
+            Returns:
                 JSON {"status": "ok"} with HTTP 200
 
-            Explanation:
+            Notes:
                 Used to check if the server is up.
             """
             return jsonify({"status": "ok"}), 200
@@ -62,7 +62,7 @@ class Routes:
         @self.app.route('/config', methods=['GET'])
         def get_config() -> flask.Response:
             """ Returns the current application configuration.
-            Output:
+            Returns:
                 JSON with config data or error
 
             Explanation:
@@ -77,7 +77,7 @@ class Routes:
         @self.app.route('/api/events', methods=['GET'])
         def get_events_ids() -> Tuple[flask.Response, int]:
             """ Returns a list of event IDs.
-            Output:
+            Returns:
                 JSON list of event IDs or error
 
             Explanation:
@@ -158,12 +158,12 @@ class Routes:
             """
             Finalizes an event and saves tracks + notes.
 
-            Input (JSON):
+            Parameters (JSON):
                 event_id: str
                 tracks: dict - All user-defined tracks
                 notes: str - General notes
 
-            Output:
+            Returns:
                 JSON success or error message
 
             Explanation:

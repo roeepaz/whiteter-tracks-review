@@ -72,7 +72,7 @@ def clear_event(event_id: str) -> None:
     """Clear a specific event from the cache.
 
     Parameters:
-        event_id (str): ID of the event to remove from the cache.
+        event_id: ID of the event to remove from the cache.
 
     Notes:
         Thread-safe removal of an event from the LRU cache to free memory

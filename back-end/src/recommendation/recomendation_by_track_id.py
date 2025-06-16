@@ -8,11 +8,11 @@ class TrackIDRecommendation(AbstractRecommendationStrategy):
         """Return all plots whose track_id matches any of the user’s selected plots.
 
         Parameters:
-            event_id (str): ID of the event to analyze.
-            selected_plots (List[dict]): Seed plots, each with 'plot_id' and 'system_id'.
+            event_id: ID of the event to analyze.
+            selected_plots: Seed plots, each with 'plot_id' and 'system_id'.
 
         Returns:
-            List[dict]: Full plot records for all matching track IDs.
+            Full plot records for all matching track IDs.
 
         Raises:
             ValueError: If no plot or track data is available for the event.

@@ -29,11 +29,11 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         """Generate motion vector–based track recommendations.
 
         Parameters:
-            event_id (str): ID of the event to analyze.
-            selected_plots (List[dict]): User-selected seed plots.
+            event_id: ID of the event to analyze.
+            selected_plots: User-selected seed plots.
 
         Returns:
-            List[dict]: Recommended plot records with assigned cluster IDs.
+            Recommended plot records with assigned cluster IDs.
 
         Notes:
             - Loads all event plots via `load_event`.
@@ -81,10 +81,10 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         """Build and validate user clusters using motion vectors.
 
         Parameters:
-            df_plots (pd.DataFrame): DataFrame of all event plots.
-            selected_plots (List[dict]): User-selected seed plots.
-            min_size (int): Minimum number of plots for a valid cluster (default: 7).
-            max_attempts (int): Maximum attempts to expand invalid clusters (default: 9).
+            df_plots: DataFrame of all event plots.
+            selected_plots: User-selected seed plots.
+            min_size: Minimum number of plots for a valid cluster (default: 7).
+            max_attempts: Maximum attempts to expand invalid clusters (default: 9).
 
         Returns:
             pd.DataFrame: The same DataFrame with updated columns:
@@ -149,7 +149,7 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         """Cluster the remaining unassigned plots using adaptive DBSCAN.
 
         Parameters:
-            df_plots (pd.DataFrame): DataFrame of all event plots; some rows may already have a 'cluster' value.
+            df_plots: DataFrame of all event plots; some rows may already have a 'cluster' value.
 
         Returns:
             pd.DataFrame: The same DataFrame with updated 'cluster' values for previously unassigned plots.
@@ -185,7 +185,7 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         """Match system-generated event clusters to user clusters based on motion similarity.
 
         Parameters:
-            df_plots (pd.DataFrame): DataFrame containing plots with both user-assigned and system-generated cluster IDs.
+            df_plots: DataFrame containing plots with both user-assigned and system-generated cluster IDs.
 
         Returns:
             pd.DataFrame: Updated DataFrame where event cluster IDs have been reassigned to match user cluster IDs when similarity criteria are met.
@@ -303,11 +303,11 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         """Find DataFrame indices corresponding to a cluster of plots.
 
         Parameters:
-            df_plots (pd.DataFrame): DataFrame of event plots, must include 'plot_key'.
-            cluster (List[dict]): Plot dicts with keys 'plot_id' and 'system_id'.
+            df_plots: DataFrame of event plots, must include 'plot_key'.
+            cluster: Plot dicts with keys 'plot_id' and 'system_id'.
 
         Returns:
-            List[int]: List of indices in `df_plots` that match the given cluster.
+            List of indices in `df_plots` that match the given cluster.
         """
         cluster_keys = {(p['plot_id'], p['system_id']) for p in cluster}
         return df_plots[df_plots['plot_key'].isin(cluster_keys)].index.tolist()
@@ -319,10 +319,10 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         """Compute dynamic deflection limit based on time delta.
 
         Parameters:
-            dt (float): Time difference between user and event clusters.
+            dt: Time difference between user and event clusters.
 
         Returns:
-            float: Maximum allowed deflection distance, capped by a predetermined maximum.
+            Maximum allowed deflection distance, capped by a predetermined maximum.
         """
         return min(DEFLECTION_BASE + DEFLECTION_PER_SECOND * dt, DEFLECTION_MAX)
 

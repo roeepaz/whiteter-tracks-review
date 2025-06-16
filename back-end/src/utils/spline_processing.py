@@ -9,9 +9,9 @@ def generate_smoothed_track_from_plots(selected_plots: List[Dict], smoothing_fac
     """Generate a smoothing spline from the user-selected plots.
 
     Parameters:
-        selected_plots (list[dict]): List of plot records, each containing spatial and temporal fields
+        selected_plots: List of plot records, each containing spatial and temporal fields
             (e.g., keys 'x', 'y', 'z', 't').
-        smoothing_factor (float): Parameter controlling spline smoothness; higher values yield smoother curves.
+        smoothing_factor: Parameter controlling spline smoothness; higher values yield smoother curves.
 
     Returns:
         List.

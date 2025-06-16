@@ -18,7 +18,7 @@ class EventApi(AbstractEventsAPI):
         """Returns a list of event IDs (folder names) inside EVENTS_FOLDER.
 
         Returns:
-            list[str]: List of folder names representing event IDs.
+            List of folder names representing event IDs.
 
         Raises:
             HTTPException: Returned as JSON error with HTTP 404 if path not found.
@@ -125,7 +125,7 @@ def get_new_track_id(event: EventWithWhiteTracks) -> int:
     """Determines the next available track ID.
 
     Parameters:
-        event (Event): The event object.
+        event: The event object.
 
     Returns:
         int: The next available track ID, defaults to 1 if none exist.
@@ -141,13 +141,10 @@ def update_white_tracks_correlations_table(track_id: int, selected_plot_ids: lis
     """Updates the correlations table between plots and a track.
 
     Parameters:
-        track_id (int): The track ID being saved.
-        selected_plot_ids (list[str]): List of plot IDs in the track.
-        full_df_plots (pd.DataFrame): All plot data from the event.
-        connection_file (Path): Path to the correlations CSV file.
-
-    Returns:
-        None
+        track_id: The track ID being saved.
+        selected_plot_ids: List of plot IDs in the track.
+        full_df_plots: All plot data from the event.
+        connection_file: Path to the correlations CSV file.
     """
     system_id_map = full_df_plots.copy()
     system_id_map["plot_id"] = system_id_map["plot_id"].astype(str)
@@ -169,11 +166,8 @@ def append_to_csv(file_path: Path, df: pd.DataFrame) -> None:
     """Appends a DataFrame to a CSV file.
 
     Parameters:
-        file_path (Path): Path to the CSV file.
-        df (pd.DataFrame): Data to append.
-
-    Returns:
-        None
+        file_path: Path to the CSV file.
+        df: Data to append.
     """
     if df.empty:
         return
@@ -185,13 +179,10 @@ def append_to_json_file(category: str, key: str, data, file_path: Path) -> None:
     """Appends a key-value pair under a category in a JSON file.
 
     Parameters:
-        category (str): JSON key grouping (e.g., 'white tracks notes').
-        key (str): Sub-key inside the category.
-        data (any): Value to store.
-        file_path (Path): Path to the JSON file.
-
-    Returns:
-        None
+        category: JSON key grouping (e.g., 'white tracks notes').
+        key: Sub-key inside the category.
+        data: Value to store.
+        file_path: Path to the JSON file.
 
     Explanation:
         Reads existing JSON (or creates new), inserts or updates the value, and writes it back to file.

@@ -18,11 +18,11 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         """Perform DBSCAN-like clustering on relevant plots.
 
         Parameters:
-            event_id (str): ID of the event to analyze.
-            selected_plots (List[dict]): User-selected plots to start clustering from.
+            event_id: ID of the event to analyze.
+            selected_plots: User-selected plots to start clustering from.
 
         Returns:
-            List[dict]: Clustered plots, each containing a 'cluster' field.
+            Clustered plots, each containing a 'cluster' field.
 
         Notes:
             - Loads event data via `load_event`.
@@ -74,8 +74,8 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         """Find the row index of a given plot in the DataFrame.
 
         Parameters:
-            df (pd.DataFrame): DataFrame containing plot data.
-            plot (dict): Plot record, must include 'plot_id' and 'system_id' keys.
+            df: DataFrame containing plot data.
+            plot: Plot record, must include 'plot_id' and 'system_id' keys.
 
         Returns:
             int: Index of the matching plot row in `df`.
@@ -101,11 +101,11 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         """Expand a cluster from a root plot using breadth-first search.
 
         Parameters:
-            df (pd.DataFrame): DataFrame containing plot data with columns
+            df: DataFrame containing plot data with columns
                 'v_avg', 'eps', and 'cluster'.
-            root_idx (int): Index of the root plot to start expansion.
-            cluster_id (int): Cluster ID to assign to all reachable plots.
-            lambda_t (float): Time weight factor for the distance calculation.
+            root_idx: Index of the root plot to start expansion.
+            cluster_id: Cluster ID to assign to all reachable plots.
+            lambda_t Time weight factor for the distance calculation.
 
         Returns:
             None: Modifies `df` in place by assigning `cluster_id` to each plot.

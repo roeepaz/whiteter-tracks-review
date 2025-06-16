@@ -25,10 +25,10 @@ def split_initial_clusters(
     """Cluster user-selected plots using space-time distance.
 
     Parameters:
-        selected_plots (List[dict]): List of user-selected plot records.
-        df_plots (pd.DataFrame): DataFrame of all event plots.
-        coords (np.ndarray): Array of shape (N, 3) with [x, y, z] coordinates.
-        lambda_t (float): Time-weight factor for distance calculation (default 0.8).
+        selected_plots: List of user-selected plot records.
+        df_plots: DataFrame of all event plots.
+        coords: Array of shape (N, 3) with [x, y, z] coordinates.
+        lambda_t: Time-weight factor for distance calculation (default 0.8).
 
     Returns:
         Tuple[List[List[dict]], List[Tuple[float, float]]]:
@@ -98,15 +98,15 @@ def expand_cluster(
     """Expand a user cluster by absorbing nearby plots.
 
     Parameters:
-        cluster (List[dict]): Initial list of plot records assigned to the cluster.
-        df_plots (pd.DataFrame): DataFrame containing all event plot data.
-        eps (float): Expansion radius based on local density.
-        v_avg (float): Average speed used for time-weighted distance calculation.
-        extra_candidates (Optional[List[List[dict]]]): Additional small clusters to consider for expansion.
-        max_d (float): Maximum allowed Euclidean distance from the cluster center (default: 7000).
+        cluster: Initial list of plot records assigned to the cluster.
+        df_plots: DataFrame containing all event plot data.
+        eps: Expansion radius based on local density.
+        v_avg: Average speed used for time-weighted distance calculation.
+        extra_candidates : Additional small clusters to consider for expansion.
+        max_d: Maximum allowed Euclidean distance from the cluster center (default: 7000).
 
     Returns:
-        List[dict]: The expanded cluster as a list of plot records.
+        The expanded cluster as a list of plot records.
 
     Notes:
         - Uses breadth-first search to include neighboring plots that satisfy both
@@ -173,16 +173,16 @@ def custom_adaptive_dbscan(
     """Perform adaptive DBSCAN clustering using local eps and velocity.
 
     Parameters:
-        df_plots (pd.DataFrame): DataFrame containing all event plots.
-        plots (List[Dict]): List of plot records corresponding to `df_plots`.
-        v_avg_list (np.ndarray): Array of local average speeds for each plot.
-        eps_list (np.ndarray): Array of local epsilon values for each plot.
-        max_dist_from_root (float): KDTree search radius for neighbors (default: 15000).
-        min_samples (int): Minimum number of samples to form a core point (default: 5).
-        lambda_t (float): Weight for the temporal dimension in distance calculation (default: 0.8).
+        df_plots: DataFrame containing all event plots.
+        plots: List of plot records corresponding to `df_plots`.
+        v_avg_list: Array of local average speeds for each plot.
+        eps_list: Array of local epsilon values for each plot.
+        max_dist_from_root: KDTree search radius for neighbors (default: 15000).
+        min_samples: Minimum number of samples to form a core point (default: 5).
+        lambda_t: Weight for the temporal dimension in distance calculation (default: 0.8).
 
     Returns:
-        np.ndarray: Cluster labels for each plot (−1 indicates noise).
+        Cluster labels for each plot (−1 indicates noise).
 
     Notes:
         - Builds a KDTree over coordinates [x, y, z, t * lambda_t].

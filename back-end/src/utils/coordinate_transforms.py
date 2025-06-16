@@ -7,17 +7,16 @@ _ecef_to_lla_transformer = Transformer.from_crs(
     always_xy=True
 )
 
-def convert_ecef_to_lla(x_ecef: float, y_ecef: float, z_ecef: float) -> tuple:
-    """
-    Convert ECEF (Earth-Centered Earth-Fixed) coordinates to geodetic coordinates (lat, lon, alt).
+def convert_ecef_to_lla(x_ecef: float, y_ecef: float, z_ecef: float) ->  tuple[float, float, float]:
+    """Convert ECEF (Earth-Centered Earth-Fixed) coordinates to geodetic coordinates (lat, lon, alt).
     
     Parameters:
-        x_ecef (float): X coordinate in meters
-        y_ecef (float): Y coordinate in meters
-        z_ecef (float): Z coordinate in meters
+        x_ecef: X coordinate in meters
+        y_ecef: Y coordinate in meters
+        z_ece: Z coordinate in meters
     
     Returns:
-        tuple[float, float, float]: (latitude, longitude, altitude) in degrees and meters
+        tuple: (latitude, longitude, altitude) in degrees and meters
     """
     lon, lat, alt = _ecef_to_lla_transformer.transform(x_ecef, y_ecef, z_ecef)
     return lat, lon, alt

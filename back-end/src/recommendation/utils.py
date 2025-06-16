@@ -51,13 +51,13 @@ def compute_local_v_avg(
     """Estimate local average velocity for each plot based on neighbor density.
 
     Parameters:
-        plots (List[Dict]): List of plot records.
-        coords (np.ndarray): Array of shape (N, 3) containing [x, y, z] coordinates.
-        radius (float): Distance threshold for neighbor search (default: 5000).
-        max_velocity (float): Upper bound for velocity estimation (default: 1000).
+        plots: List of plot records.
+        coords: Array of shape (N, 3) containing [x, y, z] coordinates.
+        radius: Distance threshold for neighbor search (default: 5000).
+        max_velocity: Upper bound for velocity estimation (default: 1000).
 
     Returns:
-        List[float]: Estimated local velocity values for each plot.
+        Estimated local velocity values for each plot.
 
     Notes:
         - Uses an LRU cache with thread-safe access.
@@ -93,11 +93,11 @@ def compute_local_eps(
     """Estimate local epsilon values for DBSCAN per plot based on velocity.
 
     Parameters:
-        plots (List[Dict]): List of plot records.
-        v_avg_list (List[float]): Estimated velocity for each plot.
+        plots: List of plot records.
+        v_avg_list: Estimated velocity for each plot.
 
     Returns:
-        List[float]: Epsilon values (neighborhood radius) per plot.
+        Epsilon values (neighborhood radius) per plot.
 
     Notes:
         - Uses an LRU cache with thread-safe access.
@@ -126,11 +126,11 @@ def find_plot_index(df: pd.DataFrame, plot: dict) -> int:
     """Find the row index of a given plot in the DataFrame.
 
     Parameters:
-        df (pd.DataFrame): DataFrame containing plot data.
-        plot (dict): Plot record, must include 'plot_id' and 'system_id' keys.
+        df: DataFrame containing plot data.
+        plot: Plot record, must include 'plot_id' and 'system_id' keys.
 
     Returns:
-        int: Index of the matching plot row in `df`.
+        Index of the matching plot row in `df`.
 
     Raises:
         ValueError: If no matching plot is found.

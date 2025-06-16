@@ -1,13 +1,13 @@
 from typing import Tuple
 from flask import jsonify
 
-def handle_error(e, status_code=500, error_type=None) -> Tuple:
+def handle_error(e: Exception, status_code: int =500, error_type :str=None) -> Tuple:
     """Handle an exception and return a standardized JSON error response.
 
     Parameters:
-        e (Exception): The exception that was raised.
-        status_code (int): HTTP status code to return. Defaults to 500.
-        error_type (str, optional): Custom error type identifier.
+        e: The exception that was raised.
+        status_code: HTTP status code to return. Defaults to 500.
+        error_type (optional): Custom error type identifier.
 
     Returns:
         tuple[flask.Response, int]: A JSON response with structure 
