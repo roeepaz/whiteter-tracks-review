@@ -10,6 +10,7 @@ from config_loader import get_constants_config_value
 DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
 EPS_SCALING_FACTOR = get_constants_config_value("EPS_SCALING_FACTOR")
 MAX_EUCLIDEAN_DISTANCE_TO_CENTER = get_constants_config_value("MAX_EUCLIDEAN_DISTANCE_TO_CENTER")
+NO_CLUSTER = get_constants_config_value("NO_CLUSTER")
 
 DBSCAN_MIN_SAMPLES = get_constants_config_value("DBSCAN_MIN_SAMPLES")
 DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
@@ -130,7 +131,7 @@ def expand_cluster(
         coords = np.array([[p['x'], p['y'], p['z']] for p in expanded])
         center = coords.mean(axis=0)
 
-        df_unassigned = df_plots[df_plots['cluster'] == -1]
+        df_unassigned = df_plots[df_plots['cluster'] == NO_CLUSTER]
         candidates = df_unassigned.to_dict(orient='records')
 
         if extra_candidates:
@@ -190,7 +191,7 @@ def custom_adaptive_dbscan(
         - Uses a combined spatial–temporal distance metric.
     """
     n = len(plots)
-    cluster_array = np.full(n, -1)
+    cluster_array = np.full(n, NO_CLUSTER)
     visited = set()
     cluster_id = 0
 
@@ -198,7 +199,7 @@ def custom_adaptive_dbscan(
     kd_coords = df_plots[['x', 'y', 'z', 't']].to_numpy()
 
     for i in range(n):
-        if i in visited or cluster_array[i] != -1:
+        if i in visited or cluster_array[i] != NO_CLUSTER:
             continue
 
         visited.add(i)
@@ -232,7 +233,7 @@ def custom_adaptive_dbscan(
                 if len(new_neighbors) >= min_samples:
                     queue.extend([j for j in new_neighbors if j not in queue])
 
-            if cluster_array[curr_idx] == -1:
+            if cluster_array[curr_idx] == NO_CLUSTER:
                 cluster_array[curr_idx] = cluster_id
 
         cluster_id += 1

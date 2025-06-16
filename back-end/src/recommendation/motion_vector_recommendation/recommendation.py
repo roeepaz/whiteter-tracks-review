@@ -14,6 +14,7 @@ from config_loader import get_constants_config_value
 MIN_VALID_CLUSTER_SIZE = get_constants_config_value("MIN_VALID_CLUSTER_SIZE")
 MAX_CLUSTER_EXPANSION_ATTEMPTS = get_constants_config_value("MAX_CLUSTER_EXPANSION_ATTEMPTS")
 EVENT_CLUSTER_ID_START = get_constants_config_value("EVENT_CLUSTER_ID_START")
+NO_CLUSTER = get_constants_config_value("NO_CLUSTER")
 
 SPATIOTEMPORAL_JUMP_LIMIT = get_constants_config_value("SPATIOTEMPORAL_JUMP_LIMIT")
 MATCHING_LAMBDA_T = get_constants_config_value("MATCHING_LAMBDA_T")
@@ -56,7 +57,7 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         coords = df_plots[['x', 'y', 'z']].values
         df_plots['plot_key'] = list(zip(df_plots['plot_id'], df_plots['system_id']))
 
-        df_plots['cluster'] = -1
+        df_plots['cluster'] = NO_CLUSTER
         df_plots['v_avg'] = compute_local_v_avg(all_plots, coords)
         df_plots['eps'] = compute_local_eps(all_plots, df_plots['v_avg'].values)
         df_plots['vector'] = None
@@ -137,11 +138,11 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
             else:
                 print(f"Cluster rejected (final size: {len(cluster)})")
 
-        # Final: Mark all leftover plots as -1
+        # Final: Mark all leftover plots as NO_CLUSTER
         for leftover_cluster in extra_candidates:
             for plot in leftover_cluster:
                 condition = (df_plots['plot_id'] == plot['plot_id']) & (df_plots['system_id'] == plot['system_id'])
-                df_plots.loc[condition, 'cluster'] = -1
+                df_plots.loc[condition, 'cluster'] = NO_CLUSTER
 
         return df_plots
 
@@ -159,7 +160,7 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
             - Assigns new cluster IDs starting from 1000 for these additional clusters.
         """
         print("\nClustering remaining event plots...")
-        df_remaining = df_plots[df_plots['cluster'] == -1]
+        df_remaining = df_plots[df_plots['cluster'] == NO_CLUSTER]
         plots = df_remaining.to_dict(orient='records')
         v_avg_list = df_remaining['v_avg'].values
         eps_list = df_remaining['eps'].values
@@ -169,15 +170,15 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         cluster_id_map = {}
 
         for idx, cid in enumerate(cluster_array):
-            if cid == -1:
+            if cid == NO_CLUSTER:
                 continue
             real_id = cluster_id_map.setdefault(cid, event_cluster_start_id + len(cluster_id_map))
             row_idx = df_remaining.index[idx]
             df_plots.at[row_idx, 'cluster'] = real_id
 
         print(f"Total remaining plots: {len(df_remaining)}")
-        print(f"Total clusters found: {len(set(cluster_array)) - (1 if -1 in cluster_array else 0)}")
-        print(f"Noise points: {np.sum(cluster_array == -1)}")
+        print(f"Total clusters found: {len(set(cluster_array)) - (1 if NO_CLUSTER in cluster_array else 0)}")
+        print(f"Noise points: {np.sum(cluster_array == NO_CLUSTER)}")
 
         return df_plots
 

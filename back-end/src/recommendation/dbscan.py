@@ -11,7 +11,9 @@ from recommendation.build_tree_cache import (
     build_kdtree_with_cache,
     filter_relevant_plots,
 )
+
 DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_TIME_WEIGHT")
+NO_CLUSTER = get_constants_config_value("NO_CLUSTER")
 
 class DBSCANRecommendation(AbstractRecommendationStrategy):
     def recommend(self, event_id: str, selected_plots: List[dict]) -> List[dict]:
@@ -42,7 +44,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
 
         # Step 2: Filter relevant plots near the selected ones
         df_filtered_plots = filter_relevant_plots(df_plots, tree, all_keys, selected_plots).reset_index(drop=True)
-        df_filtered_plots['cluster'] = -1  # default value: not assigned
+        df_filtered_plots['cluster'] = NO_CLUSTER  # default value: not assigned
 
         # Debug: detect any columns with ndarray issues
         for col in df_filtered_plots.columns:
@@ -60,7 +62,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
 
         for root_plot in selected_plots:
             root_idx = self._find_plot_index(df_filtered_plots, root_plot)
-            if df_filtered_plots.at[root_idx, 'cluster'] != -1:
+            if df_filtered_plots.at[root_idx, 'cluster'] != NO_CLUSTER:
                 continue  # already clustered
 
             print(f'--> Root {cluster_id}: eps={df_filtered_plots.at[root_idx, "eps"]:.2f}, v_avg={df_filtered_plots.at[root_idx, "v_avg"]:.2f}')
@@ -68,7 +70,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
             self._expand_cluster(df_filtered_plots, root_idx, cluster_id, DEFAULT_LAMBDA_T)
             cluster_id += 1
 
-        return df_filtered_plots[df_filtered_plots['cluster'] != -1].to_dict(orient='records')
+        return df_filtered_plots[df_filtered_plots['cluster'] != NO_CLUSTER].to_dict(orient='records')
 
     def _find_plot_index(self, df: pd.DataFrame, plot: dict) -> int:
         """Find the row index of a given plot in the DataFrame.
@@ -127,7 +129,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
 
             # Pre-filter: only consider unvisited, unclustered points
             df_candidates = df_filtered_plots[
-                (df_filtered_plots['cluster'] == -1) & (~df_filtered_plots.index.isin(visited))
+                (df_filtered_plots['cluster'] == NO_CLUSTER) & (~df_filtered_plots.index.isin(visited))
             ]
 
             for neighbor_idx, neighbor_row in df_candidates.iterrows():
