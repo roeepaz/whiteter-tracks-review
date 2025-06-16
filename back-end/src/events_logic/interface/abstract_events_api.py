@@ -10,7 +10,8 @@ class AbstractEventsAPI(ABC):
         Returns:
             List of event folder names.
         """
-        pass
+        raise NotImplementedError
+
 
     @abstractmethod
     def get_event_data(self, event_id: str) -> EventWithWhiteTracks:
@@ -22,7 +23,8 @@ class AbstractEventsAPI(ABC):
         Returns:
             Event data (plots, tracks, correlations), format defined by implementation.
         """
-        pass
+        raise NotImplementedError
+
 
     @abstractmethod
     def close_event(self, event_id: str, tracks: Any, notes: str) -> None:
@@ -33,4 +35,4 @@ class AbstractEventsAPI(ABC):
             track: User-defined track data to save.
             notes: General notes for the event closure.
         """
-        pass
+        raise NotImplementedError

@@ -20,4 +20,4 @@ class AbstractRecommendationStrategy(ABC):
         Returns:
             A list of recommended plots.
         """
-        pass
+        raise NotImplementedError
