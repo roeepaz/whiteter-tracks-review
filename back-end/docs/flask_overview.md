@@ -20,7 +20,7 @@ This Flask-based application exposes a secure, modular event-processing HTTP API
 ```python
 from flask import Flask
 from flask_cors import CORS
-from events_logic.interface.AbstractEventsAPI import AbstractEventsAPI
+from events_logic.interface.abstract_events_api import AbstractEventsAPI
 from events_logic.events_api import EventApi
 from routes import Routes
 import os
