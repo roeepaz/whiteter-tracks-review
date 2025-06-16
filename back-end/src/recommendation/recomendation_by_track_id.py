@@ -1,6 +1,6 @@
 from typing import List
 import pandas as pd
-from recommendation.AbstractRecommendationStrategy import AbstractRecommendationStrategy
+from recommendation.abstract_recommendation_strategy import AbstractRecommendationStrategy
 from events_logic.event_cache import load_event
 
 class TrackIDRecommendation(AbstractRecommendationStrategy):
