@@ -29,6 +29,9 @@ APP_CONFIG = load_yaml_config(APP_CONFIG_PATH)
 CONSTANTS_CONFIG = load_all_constants(CONSTANTS_DIR)
 
 # Accessors
+def load_app_config() -> dict:
+    return load_yaml_config(APP_CONFIG_PATH)
+
 def get_app_config_value(key: str, default=None):
     return APP_CONFIG.get(key, default)
 
