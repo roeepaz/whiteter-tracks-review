@@ -15,10 +15,10 @@ def load_event(event_id: str) -> EventWithWhiteTracks:
     """Load event data from disk or cache.
 
     Parameters:
-        event_id (str): ID of the event to load.
+        event_id: ID of the event to load.
 
     Returns:
-        EventWithWhiteTracks: Object containing enriched plots, white tracks, and correlations.
+        EventWithWhiteTracks
 
     Notes:
         - Checks cache first and returns if present.
