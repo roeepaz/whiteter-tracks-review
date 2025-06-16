@@ -98,7 +98,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         df_filtered_plots: pd.DataFrame,
         root_idx: int,
         cluster_id: int,
-        DEFAULT_LAMBDA_T: float = DEFAULT_LAMBDA_T
+        lambda_t: float = DEFAULT_LAMBDA_T
     ) -> None:
         """Expand a cluster from a root plot using breadth-first search.
 
@@ -137,7 +137,7 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
 
                 distance = minkowski_distance_plus_time(
                     current_plot, neighbor_plot,
-                    lambda_t=DEFAULT_LAMBDA_T, v_avg=avg_v
+                    lambda_t=lambda_t, v_avg=avg_v
                 )
 
                 if distance < eps:
