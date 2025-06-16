@@ -47,11 +47,11 @@ class main_class:
 ## How to Run
 
 ```bash
-python -m cd back-end
+cd back-end
 ```
 
 ```bash
-python -m python src/app.py
+python src/app.py
 ```
 
 ---
