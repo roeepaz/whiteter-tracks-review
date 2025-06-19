@@ -13,7 +13,7 @@ def convert_ecef_to_lla(x_ecef: float, y_ecef: float, z_ecef: float) ->  tuple[f
     Parameters:
         x_ecef: X coordinate in meters
         y_ecef: Y coordinate in meters
-        z_ece: Z coordinate in meters
+        z_ecef: Z coordinate in meters
     
     Returns:
         tuple: (latitude, longitude, altitude) in degrees and meters
