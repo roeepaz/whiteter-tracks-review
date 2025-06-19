@@ -1,5 +1,5 @@
-from class_main import main_class
+from server.class_main import MainClass
 
 if __name__ == '__main__':
-    server = main_class()
+    server = MainClass()
     server.run()
