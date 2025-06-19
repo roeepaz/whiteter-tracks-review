@@ -1,7 +1,7 @@
 import sys
 from typing import List, Tuple, Optional
 import numpy as np
-from custom_types.TimedPoint import TimedPoint
+from custom_types.time_point import TimedPoint
 from config.config_loader import get_constants_config_value
 
 REPRESENTATIVE_COM_SIZE = get_constants_config_value("REPRESENTATIVE_COM_SIZE")
