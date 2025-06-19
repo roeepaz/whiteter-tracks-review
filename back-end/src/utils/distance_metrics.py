@@ -10,8 +10,12 @@ MINIMAL_VELOCITY = get_constants_config_value("MINIMAL_VELOCITY")
 MAX_POSSIBLE_VELOCITY = get_constants_config_value("MAX_POSSIBLE_VELOCITY")
 VELOCITY_ALPHA = get_constants_config_value("VELOCITY_ALPHA")
 
-
-def minkowski_distance_plus_time(point1, point2,  lambda_t=DEFAULT_LAMBDA_T, v_avg=DEFAULT_AVG_VELOCITY) -> float:
+def minkowski_distance_plus_time(
+    point1: dict,
+    point2: dict,
+    lambda_t: float=DEFAULT_LAMBDA_T,
+    v_avg: float=DEFAULT_AVG_VELOCITY
+) -> float:
     """Calculate Minkowski distance for two plots (x, y, z coordinates + time).
 
     Parameters:
