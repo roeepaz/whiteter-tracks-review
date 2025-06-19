@@ -10,7 +10,7 @@ class AbstractEventsAPI(ABC):
         Returns:
             List of event folder names.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Method:'get_events_ids_list' hasn't been implemented yet.")
 
 
     @abstractmethod
@@ -23,7 +23,7 @@ class AbstractEventsAPI(ABC):
         Returns:
             Event data (plots, tracks, correlations), format defined by implementation.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Method:'get_event_data' hasn't been implemented yet.")
 
 
     @abstractmethod
@@ -35,4 +35,4 @@ class AbstractEventsAPI(ABC):
             track: User-defined track data to save.
             notes: General notes for the event closure.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Method:'close_event' hasn't been implemented yet.")

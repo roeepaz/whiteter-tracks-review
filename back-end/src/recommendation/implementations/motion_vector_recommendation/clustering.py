@@ -2,10 +2,10 @@ from typing import List, Dict, Optional, Tuple
 from collections import deque
 import numpy as np
 import pandas as pd
-from utils.distance_metrics import minkowski_distance_plus_time
-from recommendation.build_tree_cache import build_kdtree_with_cache
-from utils import find_plot_index
-from config_loader import get_constants_config_value
+from recommendation.utils.math.distance_metrics import minkowski_distance_plus_time
+from recommendation.utils.tree_cache.build_tree_cache import build_kdtree_with_cache
+from recommendation.utils.helpers.find_index import find_plot_index
+from config.config_loader import get_constants_config_value
 
 DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
 EPS_SCALING_FACTOR = get_constants_config_value("EPS_SCALING_FACTOR")

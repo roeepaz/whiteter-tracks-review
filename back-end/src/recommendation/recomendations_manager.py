@@ -1,7 +1,7 @@
-from recommendation.recomendation_by_stn import STNRecommendation
-from recommendation.recomendation_by_track_id import TrackIDRecommendation
-from recommendation.dbscan import DBSCANRecommendation
-from recommendation.motion_vector_recommendation.recommendation import MotionVectorRecommendation
+from recommendation.implementations.recomendation_by_stn import STNRecommendation
+from recommendation.implementations.recomendation_by_track_id import TrackIDRecommendation
+from recommendation.implementations.dbscan import DBSCANRecommendation
+from recommendation.implementations.motion_vector_recommendation.recommendation import MotionVectorRecommendation
 from recommendation.abstract_recommendation_strategy import AbstractRecommendationStrategy
 
 RECOMMENDATION_MAP: dict[str, type[AbstractRecommendationStrategy]] = {

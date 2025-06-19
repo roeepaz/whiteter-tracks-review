@@ -4,13 +4,12 @@ from pathlib import Path
 import pandas as pd
 import json
 from flask import jsonify
-from config_loader import get_app_config_value
+from config.config_loader import get_app_config_value
 from events_logic.abstract_events_api import AbstractEventsAPI
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event, clear_event
 from enums.event_data_keys import EventDataKey
 
-EVENTS_FOLDER = Path(get_app_config_value('EVENTS_FOLDER'))
 
 class EventApi(AbstractEventsAPI):
 
@@ -23,9 +22,11 @@ class EventApi(AbstractEventsAPI):
         Raises:
             HTTPException: Returned as JSON error with HTTP 404 if path not found.
         """
-        if not EVENTS_FOLDER.exists():
+        events_folder = Path(get_app_config_value('EVENTS_FOLDER'))
+
+        if not events_folder.exists():
             return jsonify({"error": f"path to the events not found"}), 404
-        return [folder.name for folder in EVENTS_FOLDER.iterdir() if folder.is_dir()]
+        return [folder.name for folder in events_folder.iterdir() if folder.is_dir()]
 
     def get_event_data(self, event_id) -> dict:
         """Loads event data for the given event_id.

@@ -1,7 +1,7 @@
 from typing import Dict, List
 import pandas as pd
 import numpy as np
-from config_loader import get_constants_config_value
+from config.config_loader import get_constants_config_value
 
 DEFAULT_LAMBDA_T = get_constants_config_value("DEFAULT_LAMBDA_T")
 DEFAULT_AVG_VELOCITY = get_constants_config_value("DEFAULT_AVG_VELOCITY")

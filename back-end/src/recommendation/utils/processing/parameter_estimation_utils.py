@@ -2,9 +2,9 @@
 from typing import Dict, List
 import numpy as np
 import pandas as pd
-from utils.distance_metrics import compute_distances_to_center
+from recommendation.utils.math.distance_metrics import compute_distances_to_center
 from sklearn.neighbors import NearestNeighbors
-from config_loader import get_constants_config_value
+from config.config_loader import get_constants_config_value
 
 K_NEIGHBORS = get_constants_config_value("K_NEIGHBORS")
 RADIUS_SCALING_FACTOR = get_constants_config_value("RADIUS_SCALING_FACTOR")

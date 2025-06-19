@@ -1,9 +1,9 @@
 from typing import List, Dict, Sequence
 import pandas as pd
 import numpy as np
-from utils.coordinate_transforms import convert_ecef_to_lla
+from utils.math.coordinate_transforms import convert_ecef_to_lla
 from csaps import csaps
-from config_loader import get_app_config_value  
+from config.config_loader import get_app_config_value  
 
 def generate_smoothed_track_from_plots(selected_plots: List[Dict], smoothing_factor: float) -> List[Dict]:
     """Generate a smoothing spline from the user-selected plots.

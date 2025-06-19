@@ -2,14 +2,15 @@ from typing import List
 import pandas as pd
 import numpy as np
 from recommendation.abstract_recommendation_strategy import AbstractRecommendationStrategy
-from recommendation.motion_vector_recommendation.clustering import split_initial_clusters, expand_cluster, custom_adaptive_dbscan
-from recommendation.motion_vector_recommendation.vector_utils import create_motion_vector, calc_future_center_of_mass, calc_distance_between_two_center_mass, calc_representative_center_of_mass
-from recommendation.motion_vector_recommendation.validation import is_valid_cluster
-from recommendation.utils import compute_local_eps, compute_local_v_avg
-from utils.distance_metrics import minkowski_distance_plus_time
+from recommendation.implementations.motion_vector_recommendation.clustering import split_initial_clusters, expand_cluster, custom_adaptive_dbscan
+from recommendation.implementations.motion_vector_recommendation.vector_utils import create_motion_vector, calc_future_center_of_mass, calc_distance_between_two_center_mass, calc_representative_center_of_mass
+from recommendation.implementations.motion_vector_recommendation.validation import is_valid_cluster
+from recommendation.utils.compute_parameters_for_groups.compute_local_v_avg import compute_list_v_avg
+from recommendation.utils.compute_parameters_for_groups.compute_local_eps import compute_list_eps
+from recommendation.utils.math.distance_metrics import minkowski_distance_plus_time
 from events_logic.event_cache import load_event
+from config.config_loader import get_constants_config_value
 from custom_types import EventWithWhiteTracks
-from config_loader import get_constants_config_value
 
 MIN_VALID_CLUSTER_SIZE = get_constants_config_value("MIN_VALID_CLUSTER_SIZE")
 MAX_CLUSTER_EXPANSION_ATTEMPTS = get_constants_config_value("MAX_CLUSTER_EXPANSION_ATTEMPTS")
@@ -58,8 +59,8 @@ class MotionVectorRecommendation(AbstractRecommendationStrategy):
         df_plots['plot_key'] = list(zip(df_plots['plot_id'], df_plots['system_id']))
 
         df_plots['cluster'] = NO_CLUSTER
-        df_plots['v_avg'] = compute_local_v_avg(all_plots, coords)
-        df_plots['eps'] = compute_local_eps(all_plots, df_plots['v_avg'].values)
+        df_plots['v_avg'] = compute_list_v_avg(all_plots, coords)
+        df_plots['eps'] = compute_list_eps(all_plots, df_plots['v_avg'].values)
         df_plots['vector'] = None
         df_plots['center_of_mass'] = None
 

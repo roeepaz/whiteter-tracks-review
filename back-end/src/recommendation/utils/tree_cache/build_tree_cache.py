@@ -5,7 +5,7 @@ import numpy as np
 from threading import Lock
 from scipy.spatial import KDTree
 from cachetools import LRUCache
-from config_loader import get_constants_config_value
+from config.config_loader import get_constants_config_value
 
 KDTREE_CACHE_MAXSIZE = get_constants_config_value("KDTREE_CACHE_MAXSIZE")
 DEFAULT_TIME_WEIGHT = get_constants_config_value("DEFAULT_TIME_WEIGHT")

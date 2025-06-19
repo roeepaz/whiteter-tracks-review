@@ -2,12 +2,14 @@ import numpy as np
 import pandas as pd
 from typing import List
 from recommendation.abstract_recommendation_strategy import AbstractRecommendationStrategy
-from utils.distance_metrics import minkowski_distance_plus_time
-from recommendation.utils import compute_local_eps, compute_local_v_avg
+from recommendation.utils.math.distance_metrics import minkowski_distance_plus_time
+from recommendation.utils.helpers.find_index import find_plot_index
+from recommendation.utils.compute_parameters_for_groups.compute_local_v_avg import compute_list_v_avg
+from recommendation.utils.compute_parameters_for_groups.compute_local_eps import compute_list_eps
 from custom_types import EventWithWhiteTracks
 from events_logic.event_cache import load_event
-from config_loader import get_constants_config_value
-from recommendation.build_tree_cache import (
+from config.config_loader import get_constants_config_value
+from recommendation.utils.tree_cache.build_tree_cache import (
     build_kdtree_with_cache,
     filter_relevant_plots,
 )
@@ -54,14 +56,14 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
         # Step 3: Precompute v_avg and eps per plot
         coords = df_filtered_plots[['x', 'y', 'z']].values
         plots = df_filtered_plots.to_dict(orient='records')
-        df_filtered_plots['v_avg'] = compute_local_v_avg(plots, coords)
-        df_filtered_plots['eps'] = compute_local_eps(plots, df_filtered_plots['v_avg'].values)
+        df_filtered_plots['v_avg'] = compute_list_v_avg(plots, coords)
+        df_filtered_plots['eps'] = compute_list_eps(plots, df_filtered_plots['v_avg'].values)
 
         # Step 4: Cluster expansion
         cluster_id = 0
 
         for root_plot in selected_plots:
-            root_idx = self._find_plot_index(df_filtered_plots, root_plot)
+            root_idx = self.find_plot_index(df_filtered_plots, root_plot)
             if df_filtered_plots.at[root_idx, 'cluster'] != NO_CLUSTER:
                 continue  # already clustered
 
@@ -72,26 +74,6 @@ class DBSCANRecommendation(AbstractRecommendationStrategy):
 
         return df_filtered_plots[df_filtered_plots['cluster'] != NO_CLUSTER].to_dict(orient='records')
 
-    def _find_plot_index(self, df: pd.DataFrame, plot: dict) -> int:
-        """Find the row index of a given plot in the DataFrame.
-
-        Parameters:
-            df: DataFrame containing plot data.
-            plot: Plot record, must include 'plot_id' and 'system_id' keys.
-
-        Returns:
-            int: Index of the matching plot row in `df`.
-
-        Raises:
-            ValueError: If no matching plot is found.
-        """
-        matches = df[
-            (df['plot_id'] == plot['plot_id']) &
-            (df['system_id'] == plot['system_id'])
-        ]
-        if matches.empty:
-            raise ValueError(f"Root plot not found: {plot}")
-        return matches.index[0]
 
     def _expand_cluster(
         self,

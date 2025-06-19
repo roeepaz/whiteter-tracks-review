@@ -15,7 +15,7 @@ This Flask-based application exposes a secure, modular event-processing HTTP API
 
 ---
 
-## Main Class: `main_class`
+## Main Class: `MainClass`
 
 ```python
 from flask import Flask
@@ -29,7 +29,7 @@ basedir = os.getcwd()
 cert_path = os.path.join(basedir, 'resource', 'cert.pem')
 key_path = os.path.join(basedir, 'resource', 'key.pem')
 
-class main_class:
+class MainClass:
     def __init__(self):
         self.app = Flask(__name__)
         CORS(self.app, supports_credentials=True)

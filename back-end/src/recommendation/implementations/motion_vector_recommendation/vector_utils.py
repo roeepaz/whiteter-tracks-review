@@ -2,7 +2,7 @@ import sys
 from typing import List, Tuple, Optional
 import numpy as np
 from custom_types.TimedPoint import TimedPoint
-from config_loader import get_constants_config_value
+from config.config_loader import get_constants_config_value
 
 REPRESENTATIVE_COM_SIZE = get_constants_config_value("REPRESENTATIVE_COM_SIZE")
 MOTION_VECTOR_SIZE = get_constants_config_value("MOTION_VECTOR_SIZE")

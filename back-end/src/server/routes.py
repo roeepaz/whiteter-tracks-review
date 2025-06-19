@@ -1,10 +1,10 @@
 from typing import Tuple, Union
 from flask import Flask, request, jsonify, render_template
 import flask
-from utils.spline_processing import generate_smoothed_track_from_plots
+from utils.smooth_track.spline_processing import generate_smoothed_track_from_plots
 from recommendation.recomendations_manager import get_recommendation_base_on_strategy
-from config_loader import load_app_config
-from utils.error_handling import handle_error
+from config.config_loader import load_app_config
+from server.error_handling import handle_error
 
 class Routes:
     def __init__(self, app: Flask, event_methods_instance):

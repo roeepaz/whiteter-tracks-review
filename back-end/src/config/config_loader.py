@@ -2,7 +2,7 @@ from pathlib import Path
 import yaml
 
 # Base Config Directory
-CONFIG_DIR = Path(__file__).resolve().parent / "config"
+CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
 APP_CONFIG_PATH = CONFIG_DIR / "app_config.yaml"
 CONSTANTS_DIR = CONFIG_DIR / "constants"
 
