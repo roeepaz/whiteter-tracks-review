@@ -1,6 +1,7 @@
 // src/api/api.ts
 import { Plot, TrackData, DictData, BackendResponse } from '../type/types';
 import { parseErrorFromResponse } from '../utils/apiErrorHandler';
+import { markPerf, resetMetrics, PERF_MODE } from '../utils/perfUtils';
 
 const BASE_URL = 'https://127.0.0.1:5000';
 
@@ -25,10 +26,23 @@ export const fetchEvents = async (): Promise<string[]> => {
  * @returns { Promise<DictData> }
  */
 export const fetchEventPlots = async (eventId: string | number | undefined): Promise<DictData> => {
+  // Reset metrics for each new event load
+  if (PERF_MODE) resetMetrics();
+  markPerf('T1_FETCH_START', { eventId });
+
   const response = await fetch(`${BASE_URL}/api/get-event/${eventId}`);
   if (!response.ok) throw await parseErrorFromResponse(response);
 
+  markPerf('T2_RESPONSE_RECEIVED', {
+    status: response.status,
+    contentLength: response.headers.get('content-length'),
+    backendLoadMs: response.headers.get('X-Backend-Load-Time-Ms'),
+    backendSerializeMs: response.headers.get('X-Backend-Serialize-Time-Ms'),
+  });
+
   const data = await response.json();
+  markPerf('T3_JSON_PARSED');
+
   console.log(data)
   if (!data.success || !data.data) throw new Error("Invalid event plot data format");
   return data.data;
