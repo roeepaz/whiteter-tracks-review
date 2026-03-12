@@ -20,12 +20,12 @@ class EventApi(AbstractEventsAPI):
             List of folder names representing event IDs.
 
         Raises:
-            HTTPException: Returned as JSON error with HTTP 404 if path not found.
+            FileNotFoundError: Raised if path not found.
         """
         events_folder = Path(get_app_config_value('EVENTS_FOLDER'))
 
         if not events_folder.exists():
-            return jsonify({"error": f"path to the events not found"}), 404
+            raise FileNotFoundError("path to the events not found")
         return [folder.name for folder in events_folder.iterdir() if folder.is_dir()]
 
     def get_event_data(self, event_id) -> dict:
@@ -41,17 +41,14 @@ class EventApi(AbstractEventsAPI):
                 3: List of white track correlation records.
 
         Raises:
-            FileNotFoundError: Returned as JSON error with HTTP 404 if event not found.
+            FileNotFoundError: Raised if event not found.
         """
-        try:
-            event = load_event(event_id)
-            return {
-                EventDataKey.PLOTS: event.df_plots.to_dict(orient='records'),
-                EventDataKey.WHITE_TRACKS: event.white_tracks_df.to_dict(orient='records'),
-                EventDataKey.CORRELATIONS: event.white_track_correlations_df.to_dict(orient='records'),
-            }
-        except FileNotFoundError as e:
-            return jsonify({"error": str(e)}), 404
+        event = load_event(event_id)
+        return {
+            EventDataKey.PLOTS: event.df_plots.to_dict(orient='records'),
+            EventDataKey.WHITE_TRACKS: event.white_tracks_df.to_dict(orient='records'),
+            EventDataKey.CORRELATIONS: event.white_track_correlations_df.to_dict(orient='records'),
+        }
 
     def close_event(self, event_id: str, tracks: dict, notes: str) -> None:
         """
