@@ -1,0 +1,5 @@
+# === KDTree & Plot Filtering ===
+
+DEFAULT_TIME_WEIGHT: 1.0  # Time dimension multiplier in KDTree coordinates
+DEFAULT_FILTER_RADIUS: 15000  # Radius for selecting nearby plots
+KDTREE_CACHE_MAXSIZE: 10  # Max trees in KDTree cache

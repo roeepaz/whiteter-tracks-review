@@ -1,0 +1,12 @@
+# === General Constants ===
+
+EVENTS_CACHE_MAXSIZE: 20  # Max number of events to cache in memory
+
+DEFAULT_LAMBDA_T: 0.8  # Time weighting factor for space-time distance calculations
+DEFAULT_AVG_VELOCITY: 600.0  # Default average velocity used for time-to-distance conversion (m/s)
+FALLBACK_VELOCITY: 700.0  # Velocity fallback when only 1 point is available
+MINIMAL_VELOCITY: 1.0  # Minimal velocity used to avoid division by zero when dt = 0
+MAX_POSSIBLE_VELOCITY: 1000.0  # Maximum velocity in very sparse environments
+VELOCITY_ALPHA: 0.4  # Density-to-velocity conversion sensitivity (higher → more reactive)
+
+NO_CLUSTER: -1 #define the id of the cluster for plots with no cluster

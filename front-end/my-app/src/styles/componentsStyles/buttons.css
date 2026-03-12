@@ -1,0 +1,102 @@
+
+/* Button Styling */
+.action-button,
+.submit-button,
+.clear-button,
+.save-button,
+.close-button {
+  background-color: #1e446e;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+/* Position time label and slider at the bottom */
+.bottom-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+  background-color: transparent; /* Remove background color */
+}
+.clear-button {
+  background-color: #6e1c1c;
+}
+
+.save-button {
+  background-color: #12451d;
+}
+
+.close-button {
+  background-color: #1ada37;
+}
+.get-recommendation-button {
+  background-color: #8b61ae;
+}
+
+.action-button:hover,
+.submit-button:hover,
+.clear-button:hover {
+  opacity: 0.9;
+}
+
+
+.button:disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* Tooltip styling */
+.tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
+}
+
+/* Only show the tooltip on hover if the button is enabled */
+.group:hover .tooltip {
+  opacity: 1;
+}
+
+/* Tooltip styles */
+.button::after {
+  content: attr(data-tooltip); /* Use the data-tooltip attribute as content */
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+  pointer-events: none;
+}
+
+/* Show tooltip on hover only if the button is enabled */
+.button:not(:disabled):hover::after {
+  opacity: 1;
+  visibility: visible;
+}

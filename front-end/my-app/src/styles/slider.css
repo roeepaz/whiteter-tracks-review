@@ -1,0 +1,19 @@
+  
+  /* Slider track */
+  .MuiSlider-root {
+    color: #00baff !important; /* Neon blue for slider track */
+  }
+  
+  .slider-container {
+    width: 100%; /* Take up full screen width */
+    max-width: 100%; /* Ensure it goes edge-to-edge */
+    padding: 0 10px; /* Optional padding for a little space on the sides */
+    background-color: transparent; /* Remove background color */
+  }
+  .time-label {
+    color: #a1ddec;
+    font-weight: bold;
+    text-align: center; /* Center-align text */
+    margin-bottom: 5px; /* Space between time label and slider */
+  }
+  

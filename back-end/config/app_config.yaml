@@ -1,0 +1,12 @@
+RECOMMENDATIONS_NAMES: ["stn", "trackid", "dbscan", "motion_vector"]
+
+TAGS_FOR_WHITE_TRACK: ["rocket", "boom", "fighter","terrorist"]
+
+SAMPLING_RATE_PER_SECOND_FOR_SPLINE: 10
+
+EVENTS_FOLDER: C:/Users/roeep/OneDrive/Desktop/code-review/whiteter-tracks-review/back-end/resource/events
+
+PLOTS_FILE_NAME: plots
+PLOTS_CORRELATIONS_FILE_NAME: plots_correlations
+EVENTS_TRACKS_FILE_NAME: white_tracks
+EVENTS_PLOTS_TRACK_CORRELATION_FILE_NAME: white_tracks_correlations

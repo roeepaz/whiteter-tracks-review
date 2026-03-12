@@ -1,0 +1,23 @@
+/* Full-screen map styling */
+.map-container {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .map {
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Sidebar Container Styling */
+  .sidebar-container {
+    width: 300px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  

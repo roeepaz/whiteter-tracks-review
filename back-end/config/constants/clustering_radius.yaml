@@ -1,0 +1,5 @@
+# === Clustering Radius Estimation ===
+
+K_NEIGHBORS: 6  # Number of neighbors used for radius estimation
+RADIUS_SCALING_FACTOR: 1.5  # Multiplier for the base radius
+MIN_CLUSTERING_EPSILON: 1000  # Lower bound for epsilon in clustering

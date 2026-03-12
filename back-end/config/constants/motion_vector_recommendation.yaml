@@ -1,0 +1,13 @@
+# === Motion Vector Recommendation ===
+
+MIN_VALID_CLUSTER_SIZE: 7  # Minimum plots required in a valid cluster
+MAX_CLUSTER_EXPANSION_ATTEMPTS: 9  # Max attempts to grow small clusters
+EVENT_CLUSTER_ID_START: 1000  # Start index for system-generated clusters
+
+SPATIOTEMPORAL_JUMP_LIMIT: 10000  # Max distance allowed between clusters (space-time)
+MATCHING_LAMBDA_T: 1.0  # Time weight when comparing cluster centers
+CENTER_MATCH_LAMBDA_T: 0.3  # Time weight when calculating average deflection
+
+DEFLECTION_BASE: 6000  # Base deflection allowance (meters)
+DEFLECTION_PER_SECOND: 750  # Increase per second of time gap
+DEFLECTION_MAX: 9000  # Maximum allowed deflection

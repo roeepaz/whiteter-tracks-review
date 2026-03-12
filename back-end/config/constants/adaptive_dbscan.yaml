@@ -1,0 +1,5 @@
+# === Adaptive DBSCAN Parameters ===
+
+ADAPTIVE_RADIUS: 5000  # Radius for estimating local density
+MAX_CLUSTERING_EPSILON: 3000  # Cap for epsilon in sparse areas
+ADAPTIVE_EPS_SCALING: 3.5  # Scale factor to convert neighbor count to eps
