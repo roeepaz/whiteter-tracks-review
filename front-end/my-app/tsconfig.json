@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["@types/react", "@types/react-dom", "@types/react-map-gl"],
+    "types": ["@types/react", "@types/react-dom", "@types/react-map-gl", "vite/client"],
     "target": "esnext",
     "useDefineForClassFields": true,
     "lib": ["dom", "dom.iterable", "esnext"],
