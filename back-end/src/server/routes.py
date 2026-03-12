@@ -1,6 +1,7 @@
 from typing import Tuple, Union
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, make_response
 import flask
+import time
 from utils.smooth_track.spline_processing import generate_smoothed_track_from_plots
 from recommendation.recomendations_manager import get_recommendation_base_on_strategy
 from config.config_loader import load_app_config
@@ -119,8 +120,22 @@ class Routes:
                 tuple(flask.Response, int): On error, a JSON payload with an "error" field and the HTTP status code.
             """
             try:
+                t_load_start = time.perf_counter()
                 data = self.handler.get_event_data(event_id)
-                return jsonify({"success": True, "data": data})
+                t_load_end = time.perf_counter()
+
+                t_serialize_start = time.perf_counter()
+                response = make_response(jsonify({"success": True, "data": data}))
+                t_serialize_end = time.perf_counter()
+
+                # Add timing headers for frontend instrumentation
+                load_ms = (t_load_end - t_load_start) * 1000
+                serialize_ms = (t_serialize_end - t_serialize_start) * 1000
+                response.headers['X-Backend-Load-Time-Ms'] = f'{load_ms:.2f}'
+                response.headers['X-Backend-Serialize-Time-Ms'] = f'{serialize_ms:.2f}'
+                response.headers['Access-Control-Expose-Headers'] = 'X-Backend-Load-Time-Ms, X-Backend-Serialize-Time-Ms'
+
+                return response
             except Exception as e:
                 return handle_error(e)
 

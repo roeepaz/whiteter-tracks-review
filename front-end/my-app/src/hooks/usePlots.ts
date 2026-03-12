@@ -4,6 +4,7 @@ import { fetchEventPlots, fetchConfig } from "../API/apiServer";
 import { Plot, DictData, TrackPlot, TrackAndPlotsConnection, UsePlotsResult } from "../type/types";
 import { getColor } from "../utils/colors";
 import { EventDataKey } from "../constants/eventDataKeys";
+import { markPerf } from "../utils/perfUtils";
 interface ProcessedData {
   unassociatedPlots: Plot[];
   associatedPlots: Plot[];
@@ -18,9 +19,13 @@ const processPlotData = (
 ): ProcessedData => {
   const uniqueTracks = [...new Set(rawPlots.map((plot) => plot.track_id))];
   const uniqueSensors = [...new Set(rawPlots.map((plot) => plot.system_id))];
-  const plotsWithoutTrack_id = rawPlots.filter((plot) => plot.track_id === -1)
 
-  // Generate Colors
+  const plotsWithoutTrack_id = rawPlots.filter((plot) => plot.track_id === -1);
+  const plotsWithoutTrack_idSet = new Set(plotsWithoutTrack_id.map((p) => p.plot_id));
+
+  // 🔧 שיפור חשוב נוסף: הפוך את rawConnection ל-Set
+  const connectionPlotIdSet = new Set(rawConnection.map((c) => c.plot_id));
+
   const sensorsTracksColors = uniqueTracks.reduce((acc, track) => {
     acc[track] = getColor();
     return acc;
@@ -37,19 +42,25 @@ const processPlotData = (
     return acc;
   }, {} as { [key: number]: { [key: number]: [number, number, number] } });
 
-  // Add colors and connection info to plots
-  const plotsWithColors : Plot[] = rawPlots.map((plot) => ({
+  const plotsWithColors: Plot[] = rawPlots.map((plot) => ({
     ...plot,
-    track_color: !(plotsWithoutTrack_id.includes(plot)) ? sensorsTracksColors[plot.track_id] : [255, 140, 0],
+    track_color: !plotsWithoutTrack_idSet.has(plot.plot_id)
+      ? sensorsTracksColors[plot.track_id]
+      : [255, 140, 0],
     STN_color: STNColors[plot.system_id]?.[plot.STN],
-    is_associate: rawConnection.some((connect) => connect.plot_id === plot.plot_id),
+    is_associate: connectionPlotIdSet.has(plot.plot_id), // ✅ כאן המהירות עלתה משמעותית
   }));
 
-  // Separate associated and unassociated plots
   const unassociatedPlots = plotsWithColors.filter((plot) => !plot.is_associate);
   const associatedPlots = plotsWithColors.filter((plot) => plot.is_associate);
 
-  return { unassociatedPlots, associatedPlots, sensorsTracksColors, STNColors, plotsWithoutTrack_id };
+  return {
+    unassociatedPlots,
+    associatedPlots,
+    sensorsTracksColors,
+    STNColors,
+    plotsWithoutTrack_id,
+  };
 };
 
 export const usePlots = (
@@ -67,49 +78,68 @@ export const usePlots = (
   const [plotsAssociateToTrack, setPlotsAssociateToTrack] = useState<Plot[]>([]);
   const [connections, setConnections] = useState<TrackAndPlotsConnection[]>([]);
   const [plotsWithoutTrack_id, setPlotsWithoutTrack_id] = useState<Plot[]>([]);
-  const [sensors, setSensors] = useState <number []>([]);
+  const [sensors, setSensors] = useState<number[]>([]);
+
+  // Fetch data
   const { data, isLoading, isError, refetch } = useQuery<DictData>({
     queryKey: ["eventData", eventId],
     queryFn: () => fetchEventPlots(eventId),
     enabled: !!eventId,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
   });
-    const { data: config, isError: isErrorConfig } = useQuery({
-      queryKey: ['config'],
-      queryFn: fetchConfig,
-      staleTime: 24 * 60 * 60 * 1000, // 1 day
-    });
-  
 
-  useEffect(() => {
-  if (data && data[EventDataKey.PLOTS] && Array.isArray(data[EventDataKey.PLOTS])) {
+  const { data: config, isError: isErrorConfig } = useQuery({
+    queryKey: ['config'],
+    queryFn: fetchConfig,
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+
+  // Memoized processing of raw data
+  const processed = useMemo(() => {
+    if (!data || !Array.isArray(data[EventDataKey.PLOTS])) return null;
     const rawPlots = data[EventDataKey.PLOTS] as Plot[];
-    const rawConnection = data[EventDataKey.CORRELATIONS];
-    setConnections(rawConnection);
+    const rawConnection = data[EventDataKey.CORRELATIONS] || [];
+    setConnections(rawConnection); // still needed outside processPlotData
 
-    const { unassociatedPlots, associatedPlots, plotsWithoutTrack_id } = processPlotData(rawPlots, rawConnection);
-    setPlotsWithoutTrack_id(plotsWithoutTrack_id);
+    markPerf('T4_PROCESSING_START', { plotCount: rawPlots.length });
+    const result = processPlotData(rawPlots, rawConnection);
+    markPerf('T5_PROCESSING_COMPLETE', { plotCount: rawPlots.length });
+
+    return {
+      ...result,
+      rawPlots,
+      tracks: data[EventDataKey.WHITE_TRACKS] || [],
+    };
+  }, [data]);
+
+  // Populate states from processed data
+  useEffect(() => {
+    if (!processed) return;
+
+    const {
+      unassociatedPlots,
+      associatedPlots,
+      plotsWithoutTrack_id,
+      rawPlots,
+      tracks,
+    } = processed;
+
     setPlots(unassociatedPlots);
-    setPlotsAssociateToTrack(associatedPlots);
-
-    const tracks = data[EventDataKey.WHITE_TRACKS];
-    setExistTracksPlots(tracks);
-    setMaxTime(Math.max(...rawPlots.map((plot) => plot.t)));
-    setSensors([...new Set(rawPlots.map((plot) => plot.system_id))]);
-
-    setTracksIDs([...new Set(tracks.map((plot) => plot.id))]);
     setFilteredPlots(unassociatedPlots);
-  }
-}, [data]);
+    setPlotsAssociateToTrack(associatedPlots);
+    setPlotsWithoutTrack_id(plotsWithoutTrack_id);
+    setExistTracksPlots(tracks);
+    const maxTime = rawPlots.reduce((max, p) => Math.max(max, p.t), -Infinity);
+    setMaxTime(maxTime);
+    setSensors([...new Set(rawPlots.map((p) => p.system_id))]);
+    setTracksIDs([...new Set(tracks.map((p) => p.id))]);
+  }, [processed]);
 
+  // Time-based filtering
   const filterPlotsByTime = (time: number) => {
     setFilteredPlotsByTime(filteredPlots.filter((plot) => plot.t <= time));
     setFilteredSelectedPlots(selectedPlots.filter((plot) => plot.t <= time));
   };
-  useEffect(() =>{
-
-  }, [filteredPlots] )
 
   const getFillColor = (plot: Plot, paintState: number): [number, number, number] => {
     switch (paintState) {

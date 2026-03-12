@@ -11,6 +11,8 @@ import { useSplineSegments } from "../hooks/useSplineSegments";
 import { useTracks } from "../hooks/useTracks";
 import { useTrackMutations } from "../hooks/useTrackMutations";
 import { usePersistentState, clearPersistentState  } from '../hooks/usePersistentState';
+// performance instrumentation
+import { markPerf, printSummary, PERF_MODE } from '../utils/perfUtils';
 //components that added on the map
 import Button from '../components/Button';
 import EventNotesModal from "../components/CloseEventNotesModal";
@@ -20,6 +22,7 @@ import Sidebar from "../components/Sidebar";
 import HoverInfo from "../components/HoverInfo";
 import CreateTrackSlider from '../components/createTrackSlider';
 import ChooseRecommendationTypeModal from '../components/chooseRecommendationTypeModal';
+import FPSCounter from '../components/FPSCounter';
 //types
 import { Plot,HoverInfo as HoverInfoType, Segment ,TrackData, ButtonConfig} from "../type/types";
 import Modal from "react-modal";
@@ -32,8 +35,7 @@ import '../styles/errorsAndLoader.css'
 
 Modal.setAppElement("#root"); // Bind modal to the root element for accessibility
 
-//const MAPBOX_TOKEN2 = import.meta.env.VITE_MAPBOX_TOKEN;
-const MAPBOX_TOKEN = "pk.eyJ1Ijoicm9lZXBhejE1IiwiYSI6ImNsem9sejlqMzB6ZHUycnI0YWRmeXhjNGsifQ.cw_uWWC67bKFUVuSLn8tRw";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const DOUBLE_CLICK_DELAY = 300; // Adjust delay as needed
 let clickTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -62,6 +64,7 @@ const Map: React.FC = () => {
 
   const [isCreateTrackOpen,setIsCreateTrackOpen] = useState<boolean> (false);
   const [recommendationType,setRecommendationType] = useState<string>('dbscan');
+  const perfRenderedRef = useRef(false); // Track if perf T_END has fired for this event load
 
   const { plots,existTracksPlots,tracksIDs,
           filteredPlots, setFilteredPlots, setFilteredPlotsByTime, filteredSelectedPlots,
@@ -250,7 +253,8 @@ const { createTrack, closeEvent, getRecommendation,isGettingRecommendation } = u
   
   // Define the layers, recalculated when plots(for the first time), selectedPlots, time selected change
   const layers = useMemo(() => {
-    return [
+    markPerf('T6_RENDER_START', { plotCount: filteredPlotsByTime.length });
+    const result = [
       new PointCloudLayer<Plot>({
         id: "point-cloud-layer",
         data: [...filteredPlotsByTime],
@@ -279,6 +283,8 @@ const { createTrack, closeEvent, getRecommendation,isGettingRecommendation } = u
         },
       }),
     ];
+    markPerf('T7_LAYERS_CONSTRUCTED', { plotCount: filteredPlotsByTime.length });
+    return result;
   }, [plots, paintState, filteredPlots, filteredPlotsByTime]);
 
   const selectedLayer = useMemo(() => {
@@ -467,6 +473,14 @@ const { createTrack, closeEvent, getRecommendation,isGettingRecommendation } = u
         //effects={[lightingEffect]}
         //viewState={viewState}  // Bind the view state to DeckGL
         onViewStateChange={handleViewStateChange} // Update on map interaction
+        onAfterRender={() => {
+          // Fire only once per load cycle
+          if (PERF_MODE && filteredPlotsByTime.length > 0 && !perfRenderedRef.current) {
+            perfRenderedRef.current = true;
+            markPerf('T_END_FIRST_RENDER', { plotCount: filteredPlotsByTime.length });
+            printSummary();
+          }
+        }}
       >
         <MapGL
           mapboxAccessToken={MAPBOX_TOKEN}
@@ -486,6 +500,8 @@ const { createTrack, closeEvent, getRecommendation,isGettingRecommendation } = u
       <Sidebar tracksIDs={tracksIDs} UiTracks={UiTracks} paintState={paintState} setPaintState={setPaintState} handleSeeTrack={handleSeeTrack} handleSeeUiTrack={handleSeeUiTrack} editUiTrack={editUiTrack} />
 
       <TimeSlider time={time} maxTime={maxTime} onTimeChange={handleTimeChange} />
+
+      <FPSCounter />
 
     </div>
   );
